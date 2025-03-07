@@ -22,6 +22,7 @@ export default function SignInPage() {
 
     if (error) {
       toast.error(error.message);
+      console.log(error);
     } else {
       toast.success("Signed in successfully!");
       router.push("/planner");

@@ -22,6 +22,7 @@ export default function SignUpPage() {
 
     if (error) {
       toast.error(error.message);
+      console.log(error);
     } else {
       toast.success("Signed up successfully! Check your email to confirm.");
       router.push("/planner");

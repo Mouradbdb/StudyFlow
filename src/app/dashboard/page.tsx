@@ -4,14 +4,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Bar, Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from "chart.js";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
+import { Chart as ChartJS, ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElement, PointElement } from "chart.js";
 import { motion } from "framer-motion";
 import { useDarkMode } from "../lib/DarkModeContext";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Register Chart.js components
-ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(ArcElement, BarElement, CategoryScale, LinearScale, Tooltip, Legend, LineElement, PointElement);
 
 interface ScheduleSlot {
   day: string;
@@ -31,7 +31,6 @@ export default function Dashboard() {
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklySchedule[]>([]);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState<number>(0);
   const [isSignedIn, setIsSignedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { isDarkMode } = useDarkMode();
 
@@ -64,22 +63,13 @@ export default function Dashboard() {
   if (!isSignedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-notion-bg dark:bg-notion-dark-bg p-4">
-        <p className="text-notion-text dark:text-notion-dark-text text-lg">Sign in to view your StudyFlow dashboard!</p>
+        <p className="text-notion-text dark:text-notion-dark-text text-lg">Please sign in to view your dashboard</p>
       </div>
     );
   }
 
-  const handlePrevWeek = () => {
-    setIsLoading(true);
-    setSelectedWeekIndex((prev) => Math.min(prev + 1, weeklySchedules.length - 1));
-    setTimeout(() => setIsLoading(false), 300);
-  };
-
-  const handleNextWeek = () => {
-    setIsLoading(true);
-    setSelectedWeekIndex((prev) => Math.max(prev - 1, 0));
-    setTimeout(() => setIsLoading(false), 300);
-  };
+  const handlePrevWeek = () => setSelectedWeekIndex((prev) => Math.min(prev + 1, weeklySchedules.length - 1));
+  const handleNextWeek = () => setSelectedWeekIndex((prev) => Math.max(prev - 1, 0));
 
   const currentSchedule = weeklySchedules[selectedWeekIndex]?.schedule || [];
   const currentWeekStart = weeklySchedules[selectedWeekIndex]?.week_start || "No week selected";
@@ -87,10 +77,12 @@ export default function Dashboard() {
   const chartColors = {
     primary: isDarkMode ? "#4A90E2" : "#2F80ED",
     secondary: isDarkMode ? "#D3D3D3" : "#E0E0E0",
-    text: isDarkMode ? "#FFFFFF" : "#1A1A1A",
+    text: isDarkMode ? "#E5E7EB" : "#374151",
     subjectColors: isDarkMode
       ? ["#FF6B6B", "#FFD700", "#90EE90", "#87CEEB", "#DDA0DD", "#FFB6C1", "#98FB98", "#F08080", "#B0E0E6"]
       : COLORS,
+    trendHours: isDarkMode ? "#FFD700" : "#EB5757",
+    trendCompletion: isDarkMode ? "#4A90E2" : "#2F80ED",
   };
 
   const completionRate = currentSchedule.length
@@ -105,10 +97,7 @@ export default function Dashboard() {
   };
   const completionOptions = {
     cutout: "70%",
-    plugins: {
-      legend: { display: false },
-      tooltip: { enabled: true, callbacks: { label: (context: any) => `${context.raw}%` } },
-    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context: any) => `${context.raw}%` } } },
   };
 
   const totalStudyHours = currentSchedule
@@ -133,7 +122,7 @@ export default function Dashboard() {
     labels: dailyDataRaw.map((d) => d.day.slice(0, 3)),
     datasets: [{
       label: "Hours",
-      data: dailyDataRaw.map((d) => d.hours.toFixed(1)),
+      data: dailyDataRaw.map((d) => Number(d.hours.toFixed(1))), // Convert to number
       backgroundColor: chartColors.primary,
       borderColor: chartColors.primary,
       borderWidth: 1,
@@ -141,10 +130,7 @@ export default function Dashboard() {
     }],
   };
   const dailyOptions = {
-    plugins: {
-      legend: { display: false },
-      tooltip: { callbacks: { label: (context: any) => `${context.raw}h` } },
-    },
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (context: any) => `${context.raw}h` } } },
     scales: {
       y: { beginAtZero: true, title: { display: true, text: "Hours", color: chartColors.text }, ticks: { color: chartColors.text } },
       x: { title: { display: true, text: "Day", color: chartColors.text }, ticks: { color: chartColors.text } },
@@ -166,7 +152,7 @@ export default function Dashboard() {
   const subjectData = {
     labels: subjectDataRaw.map((s) => s.name),
     datasets: [{
-      data: subjectDataRaw.map((s) => s.value.toFixed(1)),
+      data: subjectDataRaw.map((s) => Number(s.value.toFixed(1))), // Convert to number
       backgroundColor: chartColors.subjectColors,
       borderWidth: 0,
     }],
@@ -174,7 +160,7 @@ export default function Dashboard() {
   const subjectOptions = {
     cutout: "60%",
     plugins: {
-      legend: { position: "bottom" as const, labels: { color: chartColors.text } },
+      legend: { position: "bottom" as const, labels: { color: chartColors.text, font: { size: 12 } } },
       tooltip: { callbacks: { label: (context: any) => `${context.label}: ${context.raw}h` } },
     },
   };
@@ -208,110 +194,160 @@ export default function Dashboard() {
         }, 0) / currentSchedule.filter((slot) => slot.subject !== "Break" && slot.completed).length
     : 0;
 
+  const progressData = {
+    labels: weeklySchedules.slice().reverse().map((ws) => new Date(ws.week_start).toLocaleDateString("en-US", { month: "short", day: "numeric" })),
+    datasets: [
+      {
+        label: "Study Hours",
+        data: weeklySchedules.slice().reverse().map((ws) =>
+          ws.schedule
+            .filter((slot) => slot.subject !== "Break")
+            .reduce((sum, slot) => {
+              const [startH, startM] = slot.start.split(":").map(Number);
+              const [endH, endM] = slot.end.split(":").map(Number);
+              return sum + (endH + endM / 60 - (startH + startM / 60));
+            }, 0)
+        ),
+        borderColor: chartColors.trendHours,
+        backgroundColor: chartColors.trendHours,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+      {
+        label: "Completion Rate",
+        data: weeklySchedules.slice().reverse().map((ws) =>
+          ws.schedule.length
+            ? (ws.schedule.filter((slot) => slot.completed).length / ws.schedule.length) * 100
+            : 0
+        ),
+        borderColor: chartColors.trendCompletion,
+        backgroundColor: chartColors.trendCompletion,
+        fill: false,
+        tension: 0.4,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      },
+    ],
+  };
+  const progressOptions = {
+    plugins: {
+      legend: { position: "top" as const, labels: { color: chartColors.text, font: { size: 12 } } },
+      tooltip: { callbacks: { label: (context: any) => `${context.dataset.label}: ${context.raw.toFixed(1)}${context.dataset.label === "Completion Rate" ? "%" : "h"}` } },
+    },
+    scales: {
+      y: { beginAtZero: true, title: { display: true, text: "Value", color: chartColors.text }, ticks: { color: chartColors.text } },
+      x: { title: { display: true, text: "Week", color: chartColors.text }, ticks: { color: chartColors.text, maxRotation: 45, minRotation: 45 } },
+    },
+    maintainAspectRatio: false,
+  };
+
   return (
-    <main className="max-w-5xl mx-auto p-4 sm:p-6 md:p-8 bg-gradient-to-br from-notion-bg to-notion-gray dark:from-notion-dark-bg dark:to-notion-dark-gray min-h-screen">
+    <main className="max-w-6xl mx-auto p-6 bg-notion-bg dark:bg-notion-dark-bg min-h-screen">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4"
+        className="flex justify-between items-center mb-8"
       >
-        <h1 className="text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red dark:from-notion-dark-blue dark:to-notion-dark-red">
-          StudyFlow Dashboard
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handlePrevWeek}
-            disabled={selectedWeekIndex >= weeklySchedules.length - 1}
-            className="p-2 rounded-full bg-notion-gray dark:bg-notion-dark-gray text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/80 dark:hover:bg-notion-dark-gray/80 disabled:opacity-50 transition-colors duration-300"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <span className="text-lg text-notion-text dark:text-notion-dark-text">
-            Week of {new Date(currentWeekStart).toLocaleDateString()}
-          </span>
-          <button
-            onClick={handleNextWeek}
-            disabled={selectedWeekIndex <= 0}
-            className="p-2 rounded-full bg-notion-gray dark:bg-notion-dark-gray text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/80 dark:hover:bg-notion-dark-gray/80 disabled:opacity-50 transition-colors duration-300"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-        <a href="/planner" className="text-sm sm:text-base text-notion-blue dark:text-notion-dark-blue hover:underline">
-          Back to Planner
-        </a>
+        <h1 className="text-3xl font-bold text-notion-text dark:text-notion-dark-text">Dashboard</h1>
+        <a href="/planner" className="text-sm text-notion-blue dark:text-notion-dark-blue hover:underline">Back to Planner</a>
       </motion.div>
 
-      {isLoading ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="text-center text-notion-text dark:text-notion-dark-text text-lg"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex items-center justify-center gap-4 mb-8"
+      >
+        <button
+          onClick={handlePrevWeek}
+          disabled={selectedWeekIndex >= weeklySchedules.length - 1}
+          className="p-2 rounded-full bg-notion-gray/20 dark:bg-notion-dark-gray/20 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/30 dark:hover:bg-notion-dark-gray/30 disabled:opacity-50 transition-colors duration-200"
         >
-          Loading week data...
-        </motion.div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Completion Rate</h2>
-              <div className="flex justify-center">
-                <div className="w-32 h-32">
-                  <Doughnut data={completionData} options={completionOptions} />
-                </div>
-              </div>
-              <p className="text-center text-sm text-notion-text/70 dark:text-notion-dark-secondary mt-2">
-                {completionRate}% completed
-              </p>
-            </div>
-          </motion.div>
+          <ChevronLeft className="w-6 h-6" />
+        </button>
+        <span className="text-xl font-semibold text-notion-text dark:text-notion-dark-text">
+          {new Date(currentWeekStart).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+        </span>
+        <button
+          onClick={handleNextWeek}
+          disabled={selectedWeekIndex <= 0}
+          className="p-2 rounded-full bg-notion-gray/20 dark:bg-notion-dark-gray/20 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/30 dark:hover:bg-notion-dark-gray/30 disabled:opacity-50 transition-colors duration-200"
+        >
+          <ChevronRight className="w-6 h-6" />
+        </button>
+      </motion.div>
 
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.1 }}>
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Total Study Hours</h2>
-              <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">{totalStudyHours.toFixed(1)}h</p>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.2 }} className="lg:col-span-2">
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Daily Breakdown</h2>
-              <div className="h-64">
-                <Bar data={dailyData} options={dailyOptions} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.3 }}>
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Subject Distribution</h2>
-              <div className="h-64 flex justify-center">
-                <div className="w-48">
-                  <Doughnut data={subjectData} options={subjectOptions} />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.4 }}>
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Study Streak</h2>
-              <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">{streak} 🔥</p>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, delay: 0.5 }}>
-            <div className="bg-white dark:bg-notion-dark-card border-none shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-xl p-4">
-              <h2 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Avg Focus Time</h2>
-              <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">
-                {focusTime ? `${(focusTime * 60).toFixed(0)} min` : "N/A"}
-              </p>
-            </div>
-          </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6 mb-8"
+      >
+        <h2 className="text-lg font-semibold text-notion-text dark:text-notion-dark-text mb-4">Progress Over Time</h2>
+        <div className="h-80">
+          <Line data={progressData} options={progressOptions} />
         </div>
-      )}
+      </motion.div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Completion Rate</h3>
+            <div className="flex justify-center">
+              <div className="w-32 h-32">
+                <Doughnut data={completionData} options={completionOptions} />
+              </div>
+            </div>
+            <p className="text-center text-sm text-notion-text/70 dark:text-notion-dark-secondary mt-2">{completionRate}%</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Total Study Hours</h3>
+            <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">{totalStudyHours.toFixed(1)}h</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="lg:col-span-2">
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Daily Breakdown</h3>
+            <div className="h-64">
+              <Bar data={dailyData} options={dailyOptions} />
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }}>
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Subject Distribution</h3>
+            <div className="h-64 flex justify-center">
+              <div className="w-48">
+                <Doughnut data={subjectData} options={subjectOptions} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }}>
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Study Streak</h3>
+            <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">{streak} 🔥</p>
+          </div>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.9 }}>
+          <div className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md p-6">
+            <h3 className="text-md font-semibold text-notion-text dark:text-notion-dark-text mb-2">Avg Focus Time</h3>
+            <p className="text-3xl font-bold text-notion-blue dark:text-notion-dark-blue text-center">
+              {focusTime ? `${(focusTime * 60).toFixed(0)} min` : "N/A"}
+            </p>
+          </div>
+        </motion.div>
+      </div>
     </main>
   );
 }

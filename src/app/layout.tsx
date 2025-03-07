@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <DarkModeToggle />
           </header>
           {children}
-          <Toaster richColors position="top-right" />
+          <Toaster richColors position="top-left" />
         </DarkModeProvider>
       </body>
     </html>
