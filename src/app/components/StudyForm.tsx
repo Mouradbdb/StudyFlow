@@ -177,27 +177,27 @@ export default function StudyForm({
     }
   };
 
-  const populateTestData = () => {
-    const testSubjects: Subject[] = [
-      { name: "Math", hours: 6, priority: "High", color: predefinedColors[0] },
-      { name: "Physics", hours: 4, priority: "Medium", color: predefinedColors[1] },
-      { name: "History", hours: 3, priority: "Low", color: predefinedColors[2] },
-      { name: "English", hours: 5, priority: "Medium", color: predefinedColors[3] },
-    ];
-    const testFreeTimes: FreeTime[] = [
-      { day: "Monday", start: "09:00", end: "17:00" },
-      { day: "Tuesday", start: "10:00", end: "14:00" },
-      { day: "Wednesday", start: "13:00", end: "17:00" },
-      { day: "Thursday", start: "09:00", end: "12:00" },
-      { day: "Friday", start: "14:00", end: "18:00" },
-    ];
-    setSubjects(testSubjects);
-    setFreeTimes(testFreeTimes);
-    setBreakDuration(15);
-    setSlotDuration(120);
-    setMaxDailyHours(8);
-    toast.success("Test data populated successfully!");
-  };
+  // const populateTestData = () => {
+  //   const testSubjects: Subject[] = [
+  //     { name: "Math", hours: 6, priority: "High", color: predefinedColors[0] },
+  //     { name: "Physics", hours: 4, priority: "Medium", color: predefinedColors[1] },
+  //     { name: "History", hours: 3, priority: "Low", color: predefinedColors[2] },
+  //     { name: "English", hours: 5, priority: "Medium", color: predefinedColors[3] },
+  //   ];
+  //   const testFreeTimes: FreeTime[] = [
+  //     { day: "Monday", start: "09:00", end: "17:00" },
+  //     { day: "Tuesday", start: "10:00", end: "14:00" },
+  //     { day: "Wednesday", start: "13:00", end: "17:00" },
+  //     { day: "Thursday", start: "09:00", end: "12:00" },
+  //     { day: "Friday", start: "14:00", end: "18:00" },
+  //   ];
+  //   setSubjects(testSubjects);
+  //   setFreeTimes(testFreeTimes);
+  //   setBreakDuration(15);
+  //   setSlotDuration(120);
+  //   setMaxDailyHours(8);
+  //   toast.success("Test data populated successfully!");
+  // };
 
   return (
     <div className="space-y-8">
@@ -372,12 +372,12 @@ export default function StudyForm({
         >
           Load Template
         </button>
-        <button
+        {/* <button
           onClick={populateTestData}
           className="flex-1 bg-notion-green dark:bg-notion-dark-green text-white py-3 rounded-lg hover:bg-notion-green/90 dark:hover:bg-notion-dark-green/90 hover:shadow-md transition-all duration-300 font-semibold"
         >
           Populate Test Data
-        </button>
+        </button> */}
       </div>
 
       {/* Save Template Modal */}

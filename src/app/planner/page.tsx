@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import StudyForm from "../components/StudyForm";
 import StudyPlan from "../components/StudyPlan";
 import { generateSchedule, ScheduleSlot } from "../utils/scheduler";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
+import ProfileMenu from "../components/ProfileMenu";
+import { motion, AnimatePresence } from "framer-motion";
 
+// Interfaces remain the same
 interface Subject { name: string; hours: number; priority: "High" | "Medium" | "Low"; color?: string }
 interface FreeTime { day: string; start: string; end: string }
 interface Template { id: string; name: string; data: { subjects: Subject[]; freeTimes: FreeTime[] } }
+interface UserProfile { email: string; is_premium: boolean }
 
-export default function Planner() {
+// Separate component to use useSearchParams
+function PlannerContent() {
   const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,12 +25,14 @@ export default function Planner() {
   const [savedTemplates, setSavedTemplates] = useState<Template[]>([]);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [activeView, setActiveView] = useState<"planSetup" | "studyPlan">("planSetup");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [freeTimes, setFreeTimes] = useState<FreeTime[]>([]);
   const [breakDuration, setBreakDuration] = useState(15);
   const [slotDuration, setSlotDuration] = useState(120);
   const [maxDailyHours, setMaxDailyHours] = useState(8);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -41,7 +48,24 @@ export default function Planner() {
         await fetchSchedule(session.user.id, getWeekStart());
         await fetchTemplates(session.user.id);
 
-        // Check payment success and verify
+        const { data: authUser, error: authError } = await supabase.auth.getUser();
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("is_premium")
+          .eq("id", session.user.id)
+          .limit(1);
+
+        if (authError) {
+          console.error("Error fetching auth user:", authError.message);
+          toast.error("Error fetching user profile: " + authError.message);
+        } else if (userError) {
+          console.error("Error fetching premium status:", userError.message);
+          toast.error("Error fetching premium status: " + userError.message);
+        } else if (authUser && userData && userData.length > 0) {
+          setUserProfile({ email: authUser.user.email || "", is_premium: userData[0].is_premium || false });
+          setIsPremium(userData[0].is_premium || false);
+        }
+
         const success = searchParams.get("success");
         const orderId = searchParams.get("token");
         if (success === "true" && orderId) {
@@ -64,9 +88,10 @@ export default function Planner() {
                 toast.error("Failed to update premium status.");
               } else {
                 console.log("Payment verified, user updated to premium");
-                toast.success("Payment successful! You are now a premium user.");
+                toast.success("Welcome to Premium! Enjoy unlimited planning and more.");
                 setIsPremium(true);
-                router.replace("/planner"); // Clear query params
+                setUserProfile((prev) => prev ? { ...prev, is_premium: true } : null);
+                router.replace("/planner");
               }
             }
           } else {
@@ -74,21 +99,6 @@ export default function Planner() {
             console.error("Payment verification failed:", error);
             toast.error("Payment verification failed: " + error);
           }
-        }
-
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("is_premium")
-          .eq("id", session.user.id)
-          .limit(1);
-
-        if (userError) {
-          console.error("Error fetching user premium status:", userError.message);
-          toast.error("Error checking user status: " + userError.message);
-        } else if (userData && userData.length > 0) {
-          setIsPremium(userData[0].is_premium || false);
-        } else {
-          toast.error("User data not found. Please try signing out and back in.");
         }
       }
     };
@@ -100,24 +110,28 @@ export default function Planner() {
         await fetchSchedule(session.user.id, getWeekStart());
         await fetchTemplates(session.user.id);
 
+        const { data: authUser, error: authError } = await supabase.auth.getUser();
         const { data: userData, error: userError } = await supabase
           .from("users")
           .select("is_premium")
           .eq("id", session.user.id)
           .limit(1);
 
-        if (userError) {
-          console.error("Error fetching user premium status on auth change:", userError.message);
-          toast.error("Error checking user status: " + userError.message);
-        } else if (userData && userData.length > 0) {
+        if (authError) {
+          console.error("Error fetching auth user on auth change:", authError.message);
+          toast.error("Error fetching user profile: " + authError.message);
+        } else if (userError) {
+          console.error("Error fetching premium status on auth change:", userError.message);
+          toast.error("Error fetching premium status: " + userError.message);
+        } else if (authUser && userData && userData.length > 0) {
+          setUserProfile({ email: authUser.user.email || "", is_premium: userData[0].is_premium || false });
           setIsPremium(userData[0].is_premium || false);
-        } else {
-          toast.error("User data not found. Please try signing out and back in.");
         }
       } else if (event === "SIGNED_OUT") {
         setSchedule([]);
         setSavedTemplates([]);
         setIsPremium(false);
+        setUserProfile(null);
       }
     });
 
@@ -208,7 +222,7 @@ export default function Planner() {
       const now = new Date();
       const weekStart = new Date(getWeekStart());
       if (lastGenerated && lastGenerated >= weekStart && lastGenerated <= now) {
-        toast.error("Non-premium users can only generate one plan per week!");
+        setShowPremiumModal(true);
         return;
       }
     }
@@ -222,8 +236,8 @@ export default function Planner() {
       try {
         const originalWarn = console.warn;
         let warningMessage: string | null = null;
-        console.warn = (...args: any[]) => {
-          warningMessage = args.join(" ");
+        console.warn = (...args: (string | number | object)[]) => {
+          warningMessage = args.map(arg => String(arg)).join(" ");
           originalWarn(...args);
         };
 
@@ -266,7 +280,7 @@ export default function Planner() {
         console.warn = originalWarn;
         if (warningMessage) setWarning(warningMessage);
         toast.success("Study plan generated!");
-        if (activeView !== "studyPlan") {
+        if (activeView === "planSetup") {
           setActiveView("studyPlan");
         }
       } catch (err) {
@@ -328,24 +342,6 @@ export default function Planner() {
     }
   };
 
-  const handleSignOut = async () => {
-    console.log("Initiating sign out...");
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error.message);
-        toast.error("Failed to sign out: " + error.message);
-        return;
-      }
-      console.log("Sign out successful");
-      toast.success("Signed out successfully!");
-      router.push("/sign-in");
-    } catch (error) {
-      console.error("Unexpected error during sign out:", error);
-      toast.error("Error signing out: " + (error instanceof Error ? error.message : "Unknown error"));
-    }
-  };
-
   const fetchTemplatesAsync = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
@@ -353,131 +349,195 @@ export default function Planner() {
     }
   };
 
-  const handleUpgrade = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.log("No user signed in for upgrade");
-      toast.error("Please sign in to upgrade!");
-      return;
-    }
-
-    console.log("Initiating upgrade for userId:", user.id);
-    toast.info("Redirecting to PayPal...");
-
-    try {
-      const res = await fetch("/api/paypal_payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-
-      console.log("PayPal API response status:", res.status);
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        console.error("PayPal payment API error:", errorData);
-        toast.error("Failed to initiate payment: " + (errorData.error || "Unknown error"));
-        return;
-      }
-
-      const { approval_url } = await res.json();
-      if (!approval_url) {
-        console.error("No approval URL returned from API:", await res.text());
-        toast.error("Payment setup failed: No approval URL");
-        return;
-      }
-
-      console.log("Redirecting to PayPal with URL:", approval_url);
-      window.location.href = approval_url;
-    } catch (error) {
-      console.error("Error in handleUpgrade:", error);
-      toast.error("Error upgrading plan: " + (error instanceof Error ? error.message : "Unknown error"));
-    }
-  };
-
   const progress = calculateProgress(schedule);
 
   return (
-    <main className="max-w-5xl mx-auto p-6 bg-notion-bg dark:bg-notion-dark-bg min-h-screen">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-notion-text dark:text-notion-dark-text">Planner</h1>
-        <div className="flex gap-4">
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-notion-bg to-notion-bg/80 dark:from-notion-dark-bg dark:to-notion-dark-bg/80 min-h-screen rounded-xl shadow-lg"
+    >
+      <header className="flex justify-between items-center mb-8">
+        <motion.div
+          className="flex items-center gap-3"
+          whileHover={{ scale: 1.02 }}
+        >
+          <h1 className="text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
+            Study Planner
+          </h1>
+          {isPremium && (
+            <span className="px-3 py-1 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white text-sm font-medium rounded-full shadow-md">
+              Premium ✨
+            </span>
+          )}
+        </motion.div>
+        <div className="flex items-center gap-6">
           {!isPremium && (
-            <button
-              onClick={handleUpgrade}
-              className="text-sm text-notion-green dark:text-notion-dark-green hover:underline"
+            <motion.a
+              href="/pricing"
+              whileHover={{ scale: 1.05 }}
+              className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
             >
-              Upgrade to Premium
-            </button>
+              Unlock Premium
+            </motion.a>
           )}
-          {isSignedIn ? (
-            <button
-              onClick={handleSignOut}
-              className="text-sm text-notion-blue dark:text-notion-dark-blue hover:underline"
-            >
-              Sign Out
-            </button>
+          {isSignedIn && userProfile ? (
+            <ProfileMenu user={userProfile} />
           ) : (
-            <a href="/sign-in" className="text-sm text-notion-blue dark:text-notion-dark-blue hover:underline">
+            <motion.a
+              href="/sign-in"
+              whileHover={{ scale: 1.05 }}
+              className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+            >
               Sign In
-            </a>
+            </motion.a>
           )}
         </div>
-      </div>
+      </header>
 
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={() => setActiveView("planSetup")}
-          className={`px-4 py-2 rounded-lg font-semibold ${activeView === "planSetup" ? "bg-notion-blue text-white" : "bg-notion-gray text-notion-text dark:bg-notion-dark-gray dark:text-notion-dark-text hover:bg-notion-gray/90 dark:hover:bg-notion-dark-gray/90"} transition-all duration-300`}
-        >
-          Plan Setup
-        </button>
-        <button
-          onClick={() => setActiveView("studyPlan")}
-          className={`px-4 py-2 rounded-lg font-semibold ${activeView === "studyPlan" ? "bg-notion-blue text-white" : "bg-notion-gray text-notion-text dark:bg-notion-dark-gray dark:text-notion-dark-text hover:bg-notion-gray/90 dark:hover:bg-notion-dark-gray/90"} transition-all duration-300`}
-        >
-          Study Plan
-        </button>
-      </div>
+      <motion.div
+        className="flex gap-4 mb-8"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+      >
+        {["planSetup", "studyPlan"].map((view) => (
+          <motion.button
+            key={view}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
+            className={`flex-1 py-3 px-6 rounded-xl font-semibold text-sm shadow-md transition-all duration-300 ${activeView === view
+                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+              }`}
+          >
+            {view === "planSetup" ? "Plan Setup" : "Study Plan"}
+          </motion.button>
+        ))}
+      </motion.div>
 
-      {activeView === "planSetup" && (
-        <StudyForm
-          subjects={subjects}
-          setSubjects={setSubjects}
-          freeTimes={freeTimes}
-          setFreeTimes={setFreeTimes}
-          breakDuration={breakDuration}
-          setBreakDuration={setBreakDuration}
-          slotDuration={slotDuration}
-          setSlotDuration={setSlotDuration}
-          maxDailyHours={maxDailyHours}
-          setMaxDailyHours={setMaxDailyHours}
-          onSubmit={handleFormSubmit}
-          templates={savedTemplates}
-          fetchTemplates={fetchTemplatesAsync}
-        />
-      )}
-      {activeView === "studyPlan" && (
-        <StudyPlan
-          schedule={schedule}
-          onToggleComplete={toggleComplete}
-          onClearSchedule={clearSchedule}
-          progress={progress}
-          isGenerating={isGenerating}
-          isPremium={isPremium}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {activeView === "planSetup" && (
+          <motion.div
+            key="planSetup"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <StudyForm
+              subjects={subjects}
+              setSubjects={setSubjects}
+              freeTimes={freeTimes}
+              setFreeTimes={setFreeTimes}
+              breakDuration={breakDuration}
+              setBreakDuration={setBreakDuration}
+              slotDuration={slotDuration}
+              setSlotDuration={setSlotDuration}
+              maxDailyHours={maxDailyHours}
+              setMaxDailyHours={setMaxDailyHours}
+              onSubmit={handleFormSubmit}
+              templates={savedTemplates}
+              fetchTemplates={fetchTemplatesAsync}
+            />
+          </motion.div>
+        )}
+        {activeView === "studyPlan" && (
+          <motion.div
+            key="studyPlan"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <StudyPlan
+              schedule={schedule}
+              onToggleComplete={toggleComplete}
+              onClearSchedule={clearSchedule}
+              progress={progress}
+              isGenerating={isGenerating}
+              isPremium={isPremium}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {error && !isGenerating && (
-        <div className="mt-4 p-4 bg-notion-red/20 dark:bg-notion-dark-red/20 text-notion-red dark:text-notion-dark-red rounded-lg">
-          <p className="text-sm">{error}</p>
-        </div>
-      )}
-      {warning && !isGenerating && schedule.length > 0 && (
-        <div className="mt-4 p-4 bg-notion-yellow/20 dark:bg-notion-dark-yellow/20 text-notion-yellow dark:text-notion-dark-yellow rounded-lg">
-          <p className="text-sm">{warning}</p>
-        </div>
-      )}
-    </main>
+      <AnimatePresence>
+        {error && !isGenerating && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mt-6 p-4 bg-notion-red/10 dark:bg-notion-dark-red/10 text-notion-red dark:text-notion-dark-red rounded-xl border border-notion-red/20 dark:border-notion-dark-red/20 shadow-md"
+          >
+            <p className="text-sm font-medium">{error}</p>
+          </motion.div>
+        )}
+        {warning && !isGenerating && schedule.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mt-6 p-4 bg-notion-yellow/10 dark:bg-notion-dark-yellow/10 text-notion-yellow dark:text-notion-dark-yellow rounded-xl border border-notion-yellow/20 dark:border-notion-dark-yellow/20 shadow-md"
+          >
+            <p className="text-sm font-medium">{warning}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPremiumModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20"
+            >
+              <h2 className="text-2xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+                Unlock Premium Benefits
+              </h2>
+              <p className="text-notion-text dark:text-notion-dark-text mb-6 text-sm leading-relaxed">
+                Free users are limited to one plan per week. Upgrade to Premium for unlimited planning, advanced features, and priority support!
+              </p>
+              <div className="flex gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowPremiumModal(false)}
+                  className="flex-1 py-3 px-4 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200"
+                >
+                  Maybe Later
+                </motion.button>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  href="/pricing"
+                  className="flex-1 py-3 px-4 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl text-center font-medium hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+                >
+                  Go Premium
+                </motion.a>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.main>
+  );
+}
+
+// Default export wrapped in Suspense
+export default function Planner() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PlannerContent />
+    </Suspense>
   );
 }

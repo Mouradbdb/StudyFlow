@@ -5,8 +5,16 @@ import ScheduleDisplay from "./ScheduleDisplay";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface ScheduleSlot { day: string; start: string; end: string; subject: string; completed: boolean; color?: string }
+interface ScheduleSlot {
+  day: string;
+  start: string;
+  end: string;
+  subject: string;
+  completed: boolean;
+  color?: string;
+}
 
 export default function StudyPlan({
   schedule,
@@ -36,7 +44,7 @@ export default function StudyPlan({
     }
 
     const headers = ["Day", "Start", "End", "Subject", "Completed", "Color"];
-    const rows = schedule.map(slot => [
+    const rows = schedule.map((slot) => [
       slot.day,
       slot.start,
       slot.end,
@@ -47,7 +55,7 @@ export default function StudyPlan({
 
     const csvContent = [
       headers.join(","),
-      ...rows.map(row => row.map(value => `"${value}"`).join(",")),
+      ...rows.map((row) => row.map((value) => `"${value}"`).join(",")),
     ].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -81,7 +89,7 @@ export default function StudyPlan({
     });
 
     const headers = ["Day", "Start", "End", "Subject", "Completed"];
-    const rows = sortedSchedule.map(slot => [
+    const rows = sortedSchedule.map((slot) => [
       slot.day,
       slot.start,
       slot.end,
@@ -135,7 +143,7 @@ export default function StudyPlan({
 
     const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-    schedule.forEach(slot => {
+    schedule.forEach((slot) => {
       const dayIndex = days.indexOf(slot.day);
       if (dayIndex === -1) return;
 
@@ -179,66 +187,114 @@ export default function StudyPlan({
   };
 
   return (
-    <div className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray dark:border-notion-dark-gray transition-all duration-300 hover:shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-notion-text dark:text-notion-dark-text">Study Plan</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20 transition-all duration-300 hover:shadow-lg"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <motion.h2
+          initial={{ x: -20 }}
+          animate={{ x: 0 }}
+          className="text-xl font-bold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red"
+        >
+          Study Plan
+        </motion.h2>
         {isPremium && (
           <div className="relative">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-notion-green dark:bg-notion-dark-green text-white rounded-lg hover:bg-notion-green/90 dark:hover:bg-notion-dark-green/90 transition-colors duration-300"
+              className="px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300"
             >
               Export
-            </button>
-            {isExportOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-notion-dark-card border border-notion-gray dark:border-notion-dark-gray rounded-lg shadow-lg z-10">
-                <button
-                  onClick={() => { exportToCSV(); setIsExportOpen(false); }}
-                  className="block w-full text-left px-4 py-2 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20"
+            </motion.button>
+            <AnimatePresence>
+              {isExportOpen && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-notion-dark-card rounded-xl shadow-xl border border-notion-gray/20 dark:border-notion-dark-gray/20 z-10"
                 >
-                  Export to CSV
-                </button>
-                <button
-                  onClick={() => { exportToPDF(); setIsExportOpen(false); }}
-                  className="block w-full text-left px-4 py-2 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20"
-                >
-                  Export to PDF
-                </button>
-                <button
-                  onClick={() => { exportToICS(); setIsExportOpen(false); }}
-                  className="block w-full text-left px-4 py-2 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20"
-                >
-                  Export to ICS
-                </button>
-              </div>
-            )}
+                  {["CSV", "PDF", "ICS"].map((format) => (
+                    <motion.button
+                      key={format}
+                      whileHover={{ backgroundColor: "rgba(229, 231, 235, 0.2)" }}
+                      onClick={() => {
+                        if (format === "CSV") exportToCSV();
+                        else if (format === "PDF") exportToPDF();
+                        else exportToICS();
+                        setIsExportOpen(false);
+                      }}
+                      className="block w-full text-left px-4 py-2 text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
+                    >
+                      Export to {format}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         )}
       </div>
-      {isGenerating ? (
-        <div className="flex flex-col items-center">
-          <p className="text-lg text-notion-text dark:text-notion-dark-text mb-4">Generating your study plan...</p>
-          <div className="w-12 h-12 border-4 border-notion-blue dark:border-notion-dark-blue border-t-transparent dark:border-t-notion-dark-bg rounded-full animate-spin"></div>
-        </div>
-      ) : schedule.length > 0 ? (
-        <>
-          {isPremium ? (
-            <ScheduleDisplay schedule={schedule} onToggleComplete={onToggleComplete} progress={progress} />
-          ) : (
-            <p className="text-notion-text/70 dark:text-notion-dark-secondary text-center">
-              Calendar view is available only to premium users.
-            </p>
-          )}
-          <button
-            onClick={onClearSchedule}
-            className="mt-6 w-full px-4 py-2 bg-notion-gray dark:bg-notion-dark-gray text-notion-text dark:text-notion-dark-text rounded-lg hover:bg-notion-gray/90 dark:hover:bg-notion-dark-gray/90 transition-colors duration-300"
+
+      <AnimatePresence mode="wait">
+        {isGenerating ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center py-8"
           >
-            Clear Schedule
-          </button>
-        </>
-      ) : (
-        <p className="text-notion-text/70 dark:text-notion-dark-secondary text-center">No study plan generated yet. Go to Plan Setup to create one.</p>
-      )}
-    </div>
+            <p className="text-lg font-medium text-notion-text dark:text-notion-dark-text mb-6">
+              Generating your study plan...
+            </p>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-12 h-12 border-4 border-notion-blue dark:border-notion-dark-blue border-t-transparent rounded-full"
+            />
+          </motion.div>
+        ) : schedule.length > 0 ? (
+          <motion.div
+            key="schedule"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ScheduleDisplay
+              schedule={schedule}
+              onToggleComplete={onToggleComplete}
+              progress={progress}
+              isPremium={isPremium}
+            />
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onClearSchedule}
+              className="mt-6 w-full px-4 py-3 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-300 shadow-md"
+            >
+              Clear Schedule
+            </motion.button>
+          </motion.div>
+        ) : (
+          <motion.p
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="text-notion-text/70 dark:text-notion-dark-secondary text-center py-8"
+          >
+            No study plan generated yet. Go to Plan Setup to create one.
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }

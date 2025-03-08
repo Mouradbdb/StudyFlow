@@ -5,10 +5,15 @@ import { DarkModeProvider } from "./lib/DarkModeContext";
 import DarkModeToggle from "./components/DarkModeToggle";
 
 export const metadata = {
-  title: "StudyFlow",
-  description: "Plan your study schedule with flow and precision",
-  viewport: "width=device-width, initial-scale=1",
+  title: "Study Planner",
 };
+
+export function generateViewport() {
+  return {
+    width: "device-width",
+    initialScale: 1,
+  };
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
