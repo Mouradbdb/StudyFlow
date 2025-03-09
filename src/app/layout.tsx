@@ -1,4 +1,4 @@
-import { Suspense, ReactNode } from "react";
+import { ReactNode } from "react";
 import "./globals.css"; // Assuming you have global styles
 import { Toaster } from "sonner";
 import { DarkModeProvider } from "./lib/DarkModeContext";
