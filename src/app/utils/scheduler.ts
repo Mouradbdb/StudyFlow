@@ -7,12 +7,12 @@ export interface Subject {
 
 export interface FreeTime {
   day: string; // e.g., "Monday"
-  start: string; // Format: "HH:MM"
-  end: string;   // Format: "HH:MM"
+  start: string; // "HH:MM"
+  end: string;   // "HH:MM"
 }
 
 export interface ScheduleSlot {
-  day: string; // e.g., "Monday"
+  day: string;
   start: string;
   end: string;
   subject: string;
@@ -22,9 +22,6 @@ export interface ScheduleSlot {
 
 function timeToMinutes(time: string): number {
   const [hours, minutes] = time.split(":").map(Number);
-  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
-    throw new Error(`Invalid time format: ${time}`);
-  }
   return hours * 60 + minutes;
 }
 
@@ -34,96 +31,56 @@ function minutesToTime(minutes: number): string {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
 export function generateSchedule(
   subjects: Subject[],
   freeTimes: FreeTime[],
   breakDuration: number = 15,
-  slotDuration: number = 120, // Renamed from maxSlotDuration
+  slotDuration: number = 120,
   maxDailyHours: number = 8
 ): ScheduleSlot[] {
   if (!subjects.length || !freeTimes.length) return [];
-  if (breakDuration < 5 || breakDuration > 60 || slotDuration < 30 || slotDuration > 240) {
-    throw new Error("Break duration must be 5-60 minutes; slot duration must be 30-240 minutes.");
-  }
-  if (maxDailyHours < 1 || maxDailyHours > 24) throw new Error("Max daily hours must be 1-24.");
 
-  const remainingSubjects = subjects.map(s => ({ ...s, remainingHours: s.hours }));
-  const totalStudyHours = remainingSubjects.reduce((sum, s) => sum + s.hours, 0);
-  if (totalStudyHours <= 0) return [];
-
-  const freeTimeSlots: { day: string; start: number; end: number }[] = [];
-  const dailyLimits = new Map<string, number>();
-  const shuffledFreeTimes = shuffleArray(freeTimes);
-
-  for (const ft of shuffledFreeTimes) {
-    try {
-      const start = timeToMinutes(ft.start);
-      const end = timeToMinutes(ft.end);
-      if (start >= end) {
-        console.warn(`Skipping invalid free time slot: ${ft.day} ${ft.start}-${ft.end}`);
-        continue;
-      }
-      freeTimeSlots.push({ day: ft.day, start, end });
-      dailyLimits.set(ft.day, dailyLimits.get(ft.day) || maxDailyHours * 60);
-    } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown time parsing error";
-      console.warn(`Invalid time format in ${ft.day}: ${errorMessage}`);
-    }
-  }
-
-  const totalFreeMinutes = freeTimeSlots.reduce((sum, ft) => sum + (ft.end - ft.start), 0);
-  if (totalFreeMinutes < totalStudyHours * 60) {
-    throw new Error("Insufficient free time to schedule study hours.");
-  }
+  // Sort subjects by priority (High → Medium → Low)
+  const priorityGroups = {
+    High: subjects.filter(s => s.priority === "High").map(s => ({ ...s, remainingHours: s.hours })),
+    Medium: subjects.filter(s => s.priority === "Medium").map(s => ({ ...s, remainingHours: s.hours })),
+    Low: subjects.filter(s => s.priority === "Low").map(s => ({ ...s, remainingHours: s.hours })),
+  };
 
   const schedule: ScheduleSlot[] = [];
+  const dailyStudyLimits = new Map<string, number>();
 
-  for (const slot of freeTimeSlots) {
-    let currentTime = slot.start;
-    const slotEnd = slot.end;
-    let hasStudySlot = false;
-    let dailyRemaining = dailyLimits.get(slot.day) || 0;
+  // Process free time slots
+  for (const ft of freeTimes) {
+    const start = timeToMinutes(ft.start);
+    const end = timeToMinutes(ft.end);
+    if (start >= end) continue;
 
-    while (currentTime < slotEnd && remainingSubjects.length > 0 && dailyRemaining > 0) {
-      const shuffledSubjects = shuffleArray(remainingSubjects);
-      const subject = shuffledSubjects[0];
+    let currentTime = start;
+    dailyStudyLimits.set(ft.day, dailyStudyLimits.get(ft.day) ?? maxDailyHours * 60);
+    let dailyStudyRemaining = dailyStudyLimits.get(ft.day)!;
 
-      const availableMinutes = Math.min(slotEnd - currentTime, dailyRemaining);
-      if (availableMinutes < slotDuration) break;
+    while (currentTime < end && dailyStudyRemaining > 0) {
+      // Select next subject by priority
+      let subjectGroup: typeof priorityGroups["High"] | undefined;
+      if (priorityGroups.High.length) subjectGroup = priorityGroups.High;
+      else if (priorityGroups.Medium.length) subjectGroup = priorityGroups.Medium;
+      else if (priorityGroups.Low.length) subjectGroup = priorityGroups.Low;
+      else break;
 
-      if (hasStudySlot && availableMinutes >= (breakDuration + slotDuration) && remainingSubjects.length > 0) {
-        const breakEnd = currentTime + breakDuration;
-        if (breakEnd <= slotEnd && breakDuration <= dailyRemaining) {
-          schedule.push({
-            day: slot.day,
-            start: minutesToTime(currentTime),
-            end: minutesToTime(breakEnd),
-            subject: "Break",
-            completed: false,
-          });
-          currentTime = breakEnd;
-          dailyRemaining -= breakDuration;
-        }
-      }
+      const subject = subjectGroup[0];
+      const studyMinutes = Math.min(
+        slotDuration,
+        subject.remainingHours * 60,
+        dailyStudyRemaining,
+        end - currentTime
+      );
 
-      const studyMinutes = Math.min(slotDuration, subject.remainingHours * 60); // Fixed to slotDuration or remaining hours
+      if (studyMinutes <= 0) break;
+
       const studyEnd = currentTime + studyMinutes;
-
-      if (studyEnd > slotEnd || studyMinutes > dailyRemaining) {
-        break; // Skip if not enough time for a full slot
-      }
-
       schedule.push({
-        day: slot.day,
+        day: ft.day,
         start: minutesToTime(currentTime),
         end: minutesToTime(studyEnd),
         subject: subject.name,
@@ -132,17 +89,31 @@ export function generateSchedule(
       });
 
       subject.remainingHours -= studyMinutes / 60;
-      if (subject.remainingHours <= 0) remainingSubjects.splice(remainingSubjects.indexOf(subject), 1);
+      dailyStudyRemaining -= studyMinutes;
       currentTime = studyEnd;
-      dailyRemaining -= studyMinutes;
-      hasStudySlot = true;
-      dailyLimits.set(slot.day, dailyRemaining);
-    }
-  }
 
-  const unscheduledHours = remainingSubjects.reduce((sum, s) => sum + s.remainingHours, 0);
-  if (unscheduledHours > 0) {
-    console.warn(`Could not schedule ${unscheduledHours.toFixed(1)} hours due to daily limits or insufficient free time.`);
+      // Cycle subject within its priority group
+      if (subject.remainingHours > 0) {
+        subjectGroup.push(subjectGroup.shift()!);
+      } else {
+        subjectGroup.shift();
+      }
+
+      // Add break if time allows
+      if (currentTime + breakDuration <= end) {
+        const breakEnd = currentTime + breakDuration;
+        schedule.push({
+          day: ft.day,
+          start: minutesToTime(currentTime),
+          end: minutesToTime(breakEnd),
+          subject: "Break",
+          completed: false,
+        });
+        currentTime = breakEnd;
+      }
+    }
+
+    dailyStudyLimits.set(ft.day, dailyStudyRemaining);
   }
 
   return schedule;

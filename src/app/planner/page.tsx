@@ -10,13 +10,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProfileMenu from "../components/ProfileMenu";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Interfaces remain the same
 interface Subject { name: string; hours: number; priority: "High" | "Medium" | "Low"; color?: string }
 interface FreeTime { day: string; start: string; end: string }
 interface Template { id: string; name: string; data: { subjects: Subject[]; freeTimes: FreeTime[] } }
 interface UserProfile { email: string; is_premium: boolean }
 
-// Separate component to use useSearchParams
+declare global {
+  interface Window {
+    adsbygoogle: {
+      push: (config?: object) => void;
+    };
+  }
+}
+
 function PlannerContent() {
   const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,7 +38,7 @@ function PlannerContent() {
   const [breakDuration, setBreakDuration] = useState(15);
   const [slotDuration, setSlotDuration] = useState(120);
   const [maxDailyHours, setMaxDailyHours] = useState(8);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -88,7 +94,7 @@ function PlannerContent() {
                 toast.error("Failed to update premium status.");
               } else {
                 console.log("Payment verified, user updated to premium");
-                toast.success("Welcome to Premium! Enjoy unlimited planning and more.");
+                toast.success("Welcome to Premium! Enjoy ad-free planning and more.");
                 setIsPremium(true);
                 setUserProfile((prev) => prev ? { ...prev, is_premium: true } : null);
                 router.replace("/planner");
@@ -204,35 +210,13 @@ function PlannerContent() {
       return;
     }
 
-    if (!isPremium) {
-      const { data: userData, error } = await supabase
-        .from("users")
-        .select("last_plan_generated")
-        .eq("id", user.id)
-        .limit(1);
-      if (error) {
-        console.error("Error checking last plan:", error.message || error);
-        toast.error("Error checking plan limit: " + error.message);
-        return;
-      }
-
-      const lastGenerated = userData?.[0]?.last_plan_generated
-        ? new Date(userData[0].last_plan_generated)
-        : null;
-      const now = new Date();
-      const weekStart = new Date(getWeekStart());
-      if (lastGenerated && lastGenerated >= weekStart && lastGenerated <= now) {
-        setShowPremiumModal(true);
-        return;
-      }
-    }
-
     setIsGenerating(true);
     setError(null);
     setWarning(null);
 
     const randomDelay = Math.floor(Math.random() * 1000) + 500;
-    setTimeout(async () => {
+
+    const generate = async () => {
       try {
         const originalWarn = console.warn;
         let warningMessage: string | null = null;
@@ -260,17 +244,6 @@ function PlannerContent() {
               toast.error("Failed to save study plan.");
               throw upsertError;
             }
-            if (!isPremium) {
-              const { error: updateError } = await supabase
-                .from("users")
-                .update({ last_plan_generated: new Date().toISOString() })
-                .eq("id", user.id);
-              if (updateError) {
-                console.error("Error updating last plan generated:", updateError.message);
-                toast.error("Failed to update plan generation time.");
-                throw updateError;
-              }
-            }
             toast.success("Study plan saved!");
           }
         } else {
@@ -288,7 +261,24 @@ function PlannerContent() {
       } finally {
         setIsGenerating(false);
       }
-    }, randomDelay);
+    };
+
+    if (!isPremium) {
+      setShowAdModal(true);
+      setTimeout(() => {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          setShowAdModal(false);
+          generate();
+        } catch (e) {
+          console.error("AdSense error:", e);
+          setShowAdModal(false);
+          generate(); // Fallback if ad fails
+        }
+      }, 5000); // 5 seconds to ensure ad loads (adjust as needed)
+    } else {
+      setTimeout(generate, randomDelay);
+    }
   };
 
   const clearSchedule = async () => {
@@ -409,8 +399,8 @@ function PlannerContent() {
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
             className={`flex-1 py-3 px-6 rounded-xl font-semibold text-sm shadow-md transition-all duration-300 ${activeView === view
-                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+              ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+              : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
               }`}
           >
             {view === "planSetup" ? "Plan Setup" : "Study Plan"}
@@ -487,8 +477,27 @@ function PlannerContent() {
         )}
       </AnimatePresence>
 
+      {/* Banner Ad for Free Users */}
+      {!isPremium && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 text-center"
+        >
+          <ins
+            className="adsbygoogle"
+            style={{ display: "inline-block", width: "728px", height: "90px" }}
+            data-ad-client="ca-pub-9139235274050125"
+            data-ad-slot="1670033250"
+          />
+          <script
+            dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }}
+          />
+        </motion.div>
+      )}
+
       <AnimatePresence>
-        {showPremiumModal && (
+        {showAdModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -499,41 +508,54 @@ function PlannerContent() {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20"
+              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
             >
-              <h2 className="text-2xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-                Unlock Premium Benefits
+              <h2 className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+                Advertisement
               </h2>
-              <p className="text-notion-text dark:text-notion-dark-text mb-6 text-sm leading-relaxed">
-                Free users are limited to one plan per week. Upgrade to Premium for unlimited planning, advanced features, and priority support!
+              <ins
+                className="adsbygoogle"
+                style={{ display: "block" }}
+                data-ad-client="ca-pub-9139235274050125"
+                data-ad-slot="6922359933"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+              />
+              <p className="text-notion-text dark:text-notion-dark-text mt-4 text-sm">
+                Generating your plan after this ad. Upgrade to Premium for ad-free planning!
               </p>
-              <div className="flex gap-4">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowPremiumModal(false)}
-                  className="flex-1 py-3 px-4 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200"
-                >
-                  Maybe Later
-                </motion.button>
-                <motion.a
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  href="/pricing"
-                  className="flex-1 py-3 px-4 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl text-center font-medium hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
-                >
-                  Go Premium
-                </motion.a>
-              </div>
+              <motion.a
+                whileHover={{ scale: 1.05 }}
+                href="/pricing"
+                className="mt-4 inline-block px-6 py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl font-medium hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+              >
+                Go Premium
+              </motion.a>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+      {!isPremium && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-6 text-center"
+        >
+          <ins
+            className="adsbygoogle"
+            style={{ display: "inline-block", width: "728px", height: "90px" }}
+            data-ad-client="ca-pub-9139235274050125"
+            data-ad-slot="1670033250"
+          />
+          <script
+            dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }} // Also type-safe
+          />
+        </motion.div>
+      )}
     </motion.main>
   );
 }
 
-// Default export wrapped in Suspense
 export default function Planner() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
