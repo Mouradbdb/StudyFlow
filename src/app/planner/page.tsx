@@ -10,11 +10,28 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProfileMenu from "../components/ProfileMenu";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface Subject { name: string; hours: number; priority: "High" | "Medium" | "Low"; color?: string }
-interface FreeTime { day: string; start: string; end: string }
-interface Template { id: string; name: string; data: { subjects: Subject[]; freeTimes: FreeTime[] } }
-interface UserProfile { email: string; is_premium: boolean }
+interface Subject {
+  name: string;
+  hours: number;
+  priority: "High" | "Medium" | "Low";
+  color?: string;
+}
+interface FreeTime {
+  day: string;
+  start: string;
+  end: string;
+}
+interface Template {
+  id: string;
+  name: string;
+  data: { subjects: Subject[]; freeTimes: FreeTime[] };
+}
+interface UserProfile {
+  email: string;
+  is_premium: boolean;
+}
 
+// Type declaration for adsbygoogle (in lieu of a separate types/ads.d.ts for simplicity)
 declare global {
   interface Window {
     adsbygoogle: {
@@ -146,6 +163,18 @@ function PlannerContent() {
     };
   }, [router, searchParams]);
 
+  // Push banner ad when component mounts or isPremium changes
+  useEffect(() => {
+    if (!isPremium) {
+      console.log("Pushing banner ad");
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (e) {
+        console.error("AdSense banner error:", e);
+      }
+    }
+  }, [isPremium]);
+
   const getWeekStart = () => {
     const today = new Date();
     const dayOfWeek = today.getDay();
@@ -266,6 +295,7 @@ function PlannerContent() {
     if (!isPremium) {
       setShowAdModal(true);
       setTimeout(() => {
+        console.log("Pushing regeneration ad");
         try {
           (window.adsbygoogle = window.adsbygoogle || []).push({});
           setShowAdModal(false);
@@ -275,7 +305,7 @@ function PlannerContent() {
           setShowAdModal(false);
           generate(); // Fallback if ad fails
         }
-      }, 5000); // 5 seconds to ensure ad loads (adjust as needed)
+      }, 5000); // 5 seconds to ensure ad loads
     } else {
       setTimeout(generate, randomDelay);
     }
@@ -349,10 +379,7 @@ function PlannerContent() {
       className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-notion-bg to-notion-bg/80 dark:from-notion-dark-bg dark:to-notion-dark-bg/80 min-h-screen rounded-xl shadow-lg"
     >
       <header className="flex justify-between items-center mb-8">
-        <motion.div
-          className="flex items-center gap-3"
-          whileHover={{ scale: 1.02 }}
-        >
+        <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
           <h1 className="text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
             Study Planner
           </h1>
@@ -399,8 +426,8 @@ function PlannerContent() {
             whileTap={{ scale: 0.95 }}
             onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
             className={`flex-1 py-3 px-6 rounded-xl font-semibold text-sm shadow-md transition-all duration-300 ${activeView === view
-              ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-              : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
               }`}
           >
             {view === "planSetup" ? "Plan Setup" : "Study Plan"}
@@ -489,9 +516,7 @@ function PlannerContent() {
             style={{ display: "inline-block", width: "728px", height: "90px" }}
             data-ad-client="ca-pub-9139235274050125"
             data-ad-slot="1670033250"
-          />
-          <script
-            dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }}
+            data-adtest="on" // Test mode for local testing
           />
         </motion.div>
       )}
@@ -520,6 +545,7 @@ function PlannerContent() {
                 data-ad-slot="6922359933"
                 data-ad-format="auto"
                 data-full-width-responsive="true"
+                data-adtest="on" // Test mode for local testing
               />
               <p className="text-notion-text dark:text-notion-dark-text mt-4 text-sm">
                 Generating your plan after this ad. Upgrade to Premium for ad-free planning!
@@ -535,23 +561,6 @@ function PlannerContent() {
           </motion.div>
         )}
       </AnimatePresence>
-      {!isPremium && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 text-center"
-        >
-          <ins
-            className="adsbygoogle"
-            style={{ display: "inline-block", width: "728px", height: "90px" }}
-            data-ad-client="ca-pub-9139235274050125"
-            data-ad-slot="1670033250"
-          />
-          <script
-            dangerouslySetInnerHTML={{ __html: `(adsbygoogle = window.adsbygoogle || []).push({});` }} // Also type-safe
-          />
-        </motion.div>
-      )}
     </motion.main>
   );
 }
