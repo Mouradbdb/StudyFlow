@@ -20,13 +20,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="google-adsense-account" content="ca-pub-9139235274050125" />
         {/* Load AdSense script in head */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9139235274050125"
+          crossOrigin="anonymous" />
+        {/* <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9139235274050125"
           crossOrigin="anonymous"
           dangerouslySetInnerHTML={{ __html: "" }} // Empty content to satisfy TS
-        />
+        /> */}
       </head>
       <body className="bg-notion-bg text-notion-text dark:bg-notion-dark-bg dark:text-notion-dark-text min-h-screen transition-colors duration-300">
         <DarkModeProvider>
