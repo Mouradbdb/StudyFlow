@@ -102,13 +102,13 @@ export default function Pricing() {
                     <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">Perfect for getting started.</p>
                     <ul className="space-y-3 mb-6 text-sm">
                         <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Generate 1 study plan per week
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
                             <span className="text-notion-blue">✔️</span> Basic scheduling features
                         </li>
                         <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
                             <span className="text-notion-blue">✔️</span> Save your progress
+                        </li>
+                        <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
+                            <span className="text-notion-red">✘</span> No Ads
                         </li>
                         <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
                             <span className="text-notion-red">✘</span> Unlimited study plans
@@ -149,23 +149,22 @@ export default function Pricing() {
                     <h2 className="text-2xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">Premium</h2>
                     <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">For serious students who want more.</p>
                     <ul className="space-y-3 mb-6 text-sm">
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Unlimited study plans
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Advanced scheduling features
-                        </li>
+
                         <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
                             <span className="text-notion-blue">✔️</span> Save unlimited templates
                         </li>
+
                         <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
                             <span className="text-notion-blue">✔️</span> Priority email support
+                        </li>
+                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
+                            <span className="text-notion-blue">✔️</span> No ads
                         </li>
                         <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
                             <span className="text-notion-blue">✔️</span> Early access to new features
                         </li>
                     </ul>
-                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">$10 / one-time</p>
+                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">$2.99 / one-time</p>
                     {isPremium ? (
                         <button
                             className="w-full py-3 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl opacity-60 cursor-not-allowed shadow-md"

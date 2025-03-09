@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 interface ScheduleSlot {
   day: string;
@@ -32,10 +33,12 @@ export default function StudyPlan({
   isPremium: boolean;
 }) {
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [showPremiumModal, setShowPremiumModal] = useState(false); // New state for premium modal
 
   const exportToCSV = () => {
     if (!isPremium) {
-      toast.error("Export feature is available only to premium users!");
+      setShowPremiumModal(true); // Show modal for non-premium users
+      setIsExportOpen(false); // Close export dropdown
       return;
     }
     if (schedule.length === 0) {
@@ -68,7 +71,8 @@ export default function StudyPlan({
 
   const exportToPDF = () => {
     if (!isPremium) {
-      toast.error("Export feature is available only to premium users!");
+      setShowPremiumModal(true); // Show modal for non-premium users
+      setIsExportOpen(false); // Close export dropdown
       return;
     }
     if (schedule.length === 0) {
@@ -122,7 +126,8 @@ export default function StudyPlan({
 
   const exportToICS = () => {
     if (!isPremium) {
-      toast.error("Export feature is available only to premium users!");
+      setShowPremiumModal(true); // Show modal for non-premium users
+      setIsExportOpen(false); // Close export dropdown
       return;
     }
     if (schedule.length === 0) {
@@ -201,45 +206,43 @@ export default function StudyPlan({
         >
           Study Plan
         </motion.h2>
-        {isPremium && (
-          <div className="relative">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300"
-            >
-              Export
-            </motion.button>
-            <AnimatePresence>
-              {isExportOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-48 bg-white dark:bg-notion-dark-card rounded-xl shadow-xl border border-notion-gray/20 dark:border-notion-dark-gray/20 z-10"
-                >
-                  {["CSV", "PDF", "ICS"].map((format) => (
-                    <motion.button
-                      key={format}
-                      whileHover={{ backgroundColor: "rgba(229, 231, 235, 0.2)" }}
-                      onClick={() => {
-                        if (format === "CSV") exportToCSV();
-                        else if (format === "PDF") exportToPDF();
-                        else exportToICS();
-                        setIsExportOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
-                    >
-                      Export to {format}
-                    </motion.button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        )}
+        <div className="relative">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsExportOpen(!isExportOpen)}
+            className="px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300"
+          >
+            Export
+          </motion.button>
+          <AnimatePresence>
+            {isExportOpen && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 mt-2 w-48 bg-white dark:bg-notion-dark-card rounded-xl shadow-xl border border-notion-gray/20 dark:border-notion-dark-gray/20 z-10"
+              >
+                {["CSV", "PDF", "ICS"].map((format) => (
+                  <motion.button
+                    key={format}
+                    whileHover={{ backgroundColor: "rgba(229, 231, 235, 0.2)" }}
+                    onClick={() => {
+                      if (format === "CSV") exportToCSV();
+                      else if (format === "PDF") exportToPDF();
+                      else exportToICS();
+                      setIsExportOpen(false);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
+                  >
+                    Export to {format}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -293,6 +296,49 @@ export default function StudyPlan({
           >
             No study plan generated yet. Go to Plan Setup to create one.
           </motion.p>
+        )}
+      </AnimatePresence>
+
+      {/* Premium Upgrade Modal for Non-Premium Users */}
+      <AnimatePresence>
+        {showPremiumModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
+            >
+              <h2 className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+                Upgrade to Premium
+              </h2>
+              <p className="text-notion-text dark:text-notion-dark-text mb-6">
+                Exporting your study plan is a premium feature. Upgrade to unlock this and more!
+              </p>
+              <div className="flex justify-center gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setShowPremiumModal(false)}
+                  className="px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+                >
+                  Cancel
+                </motion.button>
+                <Link href="/pricing">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200"
+                  >
+                    Upgrade Now
+                  </motion.button>
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </motion.div>

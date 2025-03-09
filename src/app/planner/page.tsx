@@ -31,7 +31,7 @@ interface UserProfile {
   is_premium: boolean;
 }
 
-// Type declaration for adsbygoogle (in lieu of a separate types/ads.d.ts for simplicity)
+// Type declaration for adsbygoogle
 declare global {
   interface Window {
     adsbygoogle: {
@@ -56,6 +56,9 @@ function PlannerContent() {
   const [slotDuration, setSlotDuration] = useState(120);
   const [maxDailyHours, setMaxDailyHours] = useState(8);
   const [showAdModal, setShowAdModal] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackReaction, setFeedbackReaction] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -163,7 +166,6 @@ function PlannerContent() {
     };
   }, [router, searchParams]);
 
-  // Push banner ad when component mounts or isPremium changes
   useEffect(() => {
     if (!isPremium) {
       console.log("Pushing banner ad");
@@ -371,6 +373,32 @@ function PlannerContent() {
 
   const progress = calculateProgress(schedule);
 
+  const handleFeedbackSubmit = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!feedbackText.trim() && !feedbackReaction) {
+      toast.error("Please provide feedback or a reaction!");
+      return;
+    }
+
+    const feedbackData = {
+      user_id: user?.id || null,
+      text: feedbackText.trim() || null,
+      reaction: feedbackReaction || null,
+      created_at: new Date().toISOString(),
+    };
+
+    const { error } = await supabase.from("feedback").insert(feedbackData);
+    if (error) {
+      console.error("Feedback submission error:", error.message);
+      toast.error("Failed to submit feedback. Please try again.");
+    } else {
+      toast.success("Feedback submitted! Thank you!");
+      setFeedbackText("");
+      setFeedbackReaction(null);
+      setShowFeedbackModal(false);
+    }
+  };
+
   return (
     <motion.main
       initial={{ opacity: 0 }}
@@ -410,6 +438,13 @@ function PlannerContent() {
               Sign In
             </motion.a>
           )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setShowFeedbackModal(true)}
+            className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+          >
+            Feedback
+          </motion.button>
         </div>
       </header>
 
@@ -557,6 +592,69 @@ function PlannerContent() {
               >
                 Go Premium
               </motion.a>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {showFeedbackModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-notion-dark-bg text-notion-dark-text p-6 rounded-2xl shadow-2xl max-w-md w-full border border-notion-dark-gray/20 text-center"
+            >
+              <h2 className="text-xl font-bold mb-4">Your Feedback</h2>
+              <textarea
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                placeholder="Your feedback..."
+                className="w-full h-32 p-2 bg-notion-dark-card text-notion-dark-text border border-notion-dark-gray/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-notion-blue"
+              />
+              <div className="flex justify-center gap-4 mt-4">
+                {["😊", "🙂", "😐", "😕"].map((emoji) => (
+                  <motion.button
+                    key={emoji}
+                    onClick={() => setFeedbackReaction(emoji)}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className={`text-2xl p-2 rounded-full transition-all duration-200 ${feedbackReaction === emoji
+                        ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
+                        : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
+                      }`}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </div>
+              <div className="mt-4 flex justify-end gap-2">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => {
+                    setShowFeedbackModal(false);
+                    setFeedbackText("");
+                    setFeedbackReaction(null);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+                >
+                  Cancel
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={handleFeedbackSubmit}
+                  className="px-4 py-2 rounded-lg bg-notion-blue text-white hover:bg-notion-blue/90 transition-all duration-200"
+                >
+                  Send
+                </motion.button>
+              </div>
             </motion.div>
           </motion.div>
         )}

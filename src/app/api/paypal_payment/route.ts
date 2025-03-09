@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
                     {
                         amount: {
                             currency_code: "USD",
-                            value: "10.00",
+                            value: "2.99",
                         },
                         description: "StudyFlow Premium Upgrade",
                         custom_id: userId,

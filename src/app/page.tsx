@@ -37,11 +37,12 @@ export default function LandingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-notion-bg via-white to-notion-gray dark:from-notion-dark-bg dark:via-gray-900 dark:to-notion-dark-gray text-notion-text dark:text-notion-dark-text transition-colors duration-500">
+        <div className="min-h-screen bg-gradient-to-br from-notion-bg via-white to-notion-gray/50 dark:from-notion-dark-bg dark:via-gray-900 dark:to-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text transition-colors duration-500">
+            {/* Hero Section */}
             <section className="relative flex flex-col items-center justify-center min-h-screen px-4 sm:px-6 text-center overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(47,128,237,0.1),transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(74,140,255,0.15),transparent_70%)] pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(47,128,237,0.15),transparent_70%)] dark:bg-[radial-gradient(circle_at_center,rgba(74,140,255,0.2),transparent_70%)] pointer-events-none" />
                 <motion.h1
-                    className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red dark:from-notion-dark-blue dark:to-notion-dark-red"
+                    className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red dark:from-notion-dark-blue dark:to-notion-dark-red tracking-tight"
                     variants={heroVariants}
                     initial="hidden"
                     animate="visible"
@@ -58,20 +59,23 @@ export default function LandingPage() {
                     Transform your study routine with flow and precision.
                 </motion.p>
                 <motion.div
-                    className="relative"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.6, delay: 0.4 }}
                 >
                     <Link href="/planner">
-                        <button className="relative bg-notion-blue dark:bg-notion-dark-blue text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold overflow-hidden group">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+                        >
                             <span className="relative z-10">Get Started</span>
-                            <span className="absolute inset-0 bg-gradient-to-r from-notion-blue/80 to-notion-red/80 dark:from-notion-dark-blue/80 dark:to-notion-dark-red/80 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
-                        </button>
+                        </motion.button>
                     </Link>
                 </motion.div>
             </section>
 
+            {/* Features Section */}
             <section className="py-12 sm:py-20 px-4 sm:px-6">
                 <div className="max-w-6xl mx-auto">
                     <motion.h2
@@ -87,24 +91,32 @@ export default function LandingPage() {
                         {features.map((feature, index) => (
                             <motion.div
                                 key={index}
-                                className="relative bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-lg border border-notion-gray/50 dark:border-notion-dark-gray/50 hover:shadow-xl transition-all duration-300"
+                                className="relative bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-lg border border-notion-gray/30 dark:border-notion-dark-gray/30 hover:shadow-xl transition-all duration-300"
                                 custom={index}
                                 variants={featureVariants}
                                 initial="hidden"
                                 whileInView="visible"
                                 viewport={{ once: true }}
                             >
-                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-notion-blue dark:bg-notion-dark-blue text-white w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full text-xl sm:text-2xl shadow-md">
+                                <motion.div
+                                    whileHover={{ scale: 1.1, rotate: 5 }}
+                                    className="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white w-12 h-12 flex items-center justify-center rounded-full text-2xl shadow-md"
+                                >
                                     {feature.icon}
-                                </div>
-                                <h3 className="text-lg sm:text-xl font-semibold mt-6 mb-3 text-notion-text dark:text-notion-dark-text">{feature.title}</h3>
-                                <p className="text-notion-text/70 dark:text-notion-dark-secondary text-sm sm:text-base">{feature.description}</p>
+                                </motion.div>
+                                <h3 className="text-lg sm:text-xl font-semibold mt-8 mb-3 text-notion-text dark:text-notion-dark-text">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-notion-text/70 dark:text-notion-dark-secondary text-sm sm:text-base leading-relaxed">
+                                    {feature.description}
+                                </p>
                             </motion.div>
                         ))}
                     </div>
                 </div>
             </section>
 
+            {/* CTA Section */}
             <section className="py-12 sm:py-20 px-4 sm:px-6 text-center">
                 <motion.h2
                     className="text-3xl sm:text-4xl md:text-5xl font-semibold mb-6 sm:mb-8 text-notion-text dark:text-notion-dark-text"
@@ -116,13 +128,13 @@ export default function LandingPage() {
                     Elevate Your Study Game
                 </motion.h2>
                 <motion.p
-                    className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto text-notion-text/70 dark:text-notion-dark-secondary"
+                    className="text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-2xl mx-auto text-notion-text/70 dark:text-notion-dark-secondary leading-relaxed"
                     initial={{ opacity: 0 }}
                     whileInView={{ opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
                     viewport={{ once: true }}
                 >
-                    Join thousands of students mastering their schedules with Study Planner.
+                    Join thousands of students mastering their schedules with StudyFlow.
                 </motion.p>
                 <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -131,15 +143,22 @@ export default function LandingPage() {
                     viewport={{ once: true }}
                 >
                     <Link href="/planner">
-                        <button className="bg-notion-red dark:bg-notion-dark-red text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold hover:bg-notion-red/90 dark:hover:bg-notion-dark-red/90 transition-all duration-300 shadow-lg hover:shadow-xl">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="bg-gradient-to-r from-notion-red to-notion-dark-red text-white px-6 sm:px-10 py-3 sm:py-4 rounded-full text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
                             Start Planning Now
-                        </button>
+                        </motion.button>
                     </Link>
                 </motion.div>
             </section>
 
+            {/* Footer */}
             <footer className="py-8 sm:py-10 px-4 sm:px-6 text-center bg-notion-gray/20 dark:bg-notion-dark-gray/20 text-notion-text/70 dark:text-notion-dark-secondary">
-                <p className="text-xs sm:text-sm">© 2025 StudyFlow by xAI. Built with passion for smarter studying.</p>
+                <p className="text-xs sm:text-sm">
+                    © {new Date().getFullYear()} StudyFlow by xAI. Built with passion for smarter studying.
+                </p>
             </footer>
         </div>
     );
