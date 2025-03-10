@@ -33,12 +33,12 @@ export default function StudyPlan({
   isPremium: boolean;
 }) {
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false); // New state for premium modal
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   const exportToCSV = () => {
     if (!isPremium) {
-      setShowPremiumModal(true); // Show modal for non-premium users
-      setIsExportOpen(false); // Close export dropdown
+      setShowPremiumModal(true);
+      setIsExportOpen(false);
       return;
     }
     if (schedule.length === 0) {
@@ -71,8 +71,8 @@ export default function StudyPlan({
 
   const exportToPDF = () => {
     if (!isPremium) {
-      setShowPremiumModal(true); // Show modal for non-premium users
-      setIsExportOpen(false); // Close export dropdown
+      setShowPremiumModal(true);
+      setIsExportOpen(false);
       return;
     }
     if (schedule.length === 0) {
@@ -126,8 +126,8 @@ export default function StudyPlan({
 
   const exportToICS = () => {
     if (!isPremium) {
-      setShowPremiumModal(true); // Show modal for non-premium users
-      setIsExportOpen(false); // Close export dropdown
+      setShowPremiumModal(true);
+      setIsExportOpen(false);
       return;
     }
     if (schedule.length === 0) {
@@ -196,22 +196,22 @@ export default function StudyPlan({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20 transition-all duration-300 hover:shadow-lg"
+      className="bg-white dark:bg-notion-dark-card p-4 sm:p-6 rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20 transition-all duration-300 hover:shadow-lg w-full"
     >
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-4">
         <motion.h2
           initial={{ x: -20 }}
           animate={{ x: 0 }}
-          className="text-xl font-bold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red"
+          className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red"
         >
           Study Plan
         </motion.h2>
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsExportOpen(!isExportOpen)}
-            className="px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300"
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300 text-sm sm:text-base"
           >
             Export
           </motion.button>
@@ -222,7 +222,7 @@ export default function StudyPlan({
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -10 }}
                 transition={{ duration: 0.2 }}
-                className="absolute right-0 mt-2 w-48 bg-white dark:bg-notion-dark-card rounded-xl shadow-xl border border-notion-gray/20 dark:border-notion-dark-gray/20 z-10"
+                className="absolute right-0 sm:right-0 mt-2 w-full sm:w-48 bg-white dark:bg-notion-dark-card rounded-xl shadow-xl border border-notion-gray/20 dark:border-notion-dark-gray/20 z-10"
               >
                 {["CSV", "PDF", "ICS"].map((format) => (
                   <motion.button
@@ -234,7 +234,7 @@ export default function StudyPlan({
                       else exportToICS();
                       setIsExportOpen(false);
                     }}
-                    className="block w-full text-left px-4 py-2 text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
+                    className="block w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
                   >
                     Export to {format}
                   </motion.button>
@@ -252,15 +252,15 @@ export default function StudyPlan({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center py-8"
+            className="flex flex-col items-center py-6 sm:py-8"
           >
-            <p className="text-lg font-medium text-notion-text dark:text-notion-dark-text mb-6">
+            <p className="text-base sm:text-lg font-medium text-notion-text dark:text-notion-dark-text mb-4 sm:mb-6">
               Generating your study plan...
             </p>
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 border-4 border-notion-blue dark:border-notion-dark-blue border-t-transparent rounded-full"
+              className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-notion-blue dark:border-notion-dark-blue border-t-transparent rounded-full"
             />
           </motion.div>
         ) : schedule.length > 0 ? (
@@ -281,7 +281,7 @@ export default function StudyPlan({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onClearSchedule}
-              className="mt-6 w-full px-4 py-3 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-300 shadow-md"
+              className="mt-4 sm:mt-6 w-full px-4 py-2 sm:py-3 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-300 shadow-md text-sm sm:text-base"
             >
               Clear Schedule
             </motion.button>
@@ -292,14 +292,13 @@ export default function StudyPlan({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="text-notion-text/70 dark:text-notion-dark-secondary text-center py-8"
+            className="text-notion-text/70 dark:text-notion-dark-secondary text-center py-6 sm:py-8 text-sm sm:text-base"
           >
             No study plan generated yet. Go to Plan Setup to create one.
           </motion.p>
         )}
       </AnimatePresence>
 
-      {/* Premium Upgrade Modal for Non-Premium Users */}
       <AnimatePresence>
         {showPremiumModal && (
           <motion.div
@@ -312,26 +311,26 @@ export default function StudyPlan({
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
+              className="bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
             >
-              <h2 className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+              <h2 className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
                 Upgrade to Premium
               </h2>
-              <p className="text-notion-text dark:text-notion-dark-text mb-6">
+              <p className="text-notion-text dark:text-notion-dark-text mb-4 sm:mb-6 text-sm sm:text-base">
                 Exporting your study plan is a premium feature. Upgrade to unlock this and more!
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-center gap-2 sm:gap-4">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   onClick={() => setShowPremiumModal(false)}
-                  className="px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200 text-sm sm:text-base"
                 >
                   Cancel
                 </motion.button>
                 <Link href="/pricing">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
-                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200"
+                    className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 text-sm sm:text-base"
                   >
                     Upgrade Now
                   </motion.button>

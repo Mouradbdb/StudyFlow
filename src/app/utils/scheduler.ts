@@ -34,8 +34,8 @@ function minutesToTime(minutes: number): string {
 export function generateSchedule(
   subjects: Subject[],
   freeTimes: FreeTime[],
-  breakDuration: number = 15,
-  slotDuration: number = 120,
+  breakDuration: number = 5,
+  slotDuration: number = 120, // Default 2 hours
   maxDailyHours: number = 8
 ): ScheduleSlot[] {
   if (!subjects.length || !freeTimes.length) return [];
@@ -69,14 +69,29 @@ export function generateSchedule(
       else break;
 
       const subject = subjectGroup[0];
-      const studyMinutes = Math.min(
-        slotDuration,
-        subject.remainingHours * 60,
-        dailyStudyRemaining,
-        end - currentTime
-      );
+      const halfSlotDuration = slotDuration / 2;
 
-      if (studyMinutes <= 0) break;
+      // Determine study duration: full slotDuration or half if not enough time
+      let studyMinutes: number;
+      const remainingFreeTime = end - currentTime;
+      const remainingSubjectTime = subject.remainingHours * 60;
+      const remainingDailyTime = dailyStudyRemaining;
+
+      if (
+        remainingFreeTime >= slotDuration &&
+        remainingSubjectTime >= slotDuration &&
+        remainingDailyTime >= slotDuration
+      ) {
+        studyMinutes = slotDuration; // Use full slot duration
+      } else if (
+        remainingFreeTime >= halfSlotDuration &&
+        remainingSubjectTime >= halfSlotDuration &&
+        remainingDailyTime >= halfSlotDuration
+      ) {
+        studyMinutes = halfSlotDuration; // Use half slot duration
+      } else {
+        break; // Not enough time for even half a slot
+      }
 
       const studyEnd = currentTime + studyMinutes;
       schedule.push({

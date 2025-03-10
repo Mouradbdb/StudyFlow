@@ -31,12 +31,9 @@ interface UserProfile {
   is_premium: boolean;
 }
 
-// Type declaration for adsbygoogle
 declare global {
   interface Window {
-    adsbygoogle: {
-      push: (config?: object) => void;
-    };
+    adsbygoogle: { push: (config?: object) => void };
   }
 }
 
@@ -305,9 +302,9 @@ function PlannerContent() {
         } catch (e) {
           console.error("AdSense error:", e);
           setShowAdModal(false);
-          generate(); // Fallback if ad fails
+          generate();
         }
-      }, 5000); // 5 seconds to ensure ad loads
+      }, 5000);
     } else {
       setTimeout(generate, randomDelay);
     }
@@ -404,268 +401,274 @@ function PlannerContent() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="max-w-6xl mx-auto p-6 bg-gradient-to-br from-notion-bg to-notion-bg/80 dark:from-notion-dark-bg dark:to-notion-dark-bg/80 min-h-screen rounded-xl shadow-lg"
+      className="w-full min-h-screen p-4 sm:p-6 bg-gradient-to-br from-notion-bg to-notion-bg/80 dark:from-notion-dark-bg dark:to-notion-dark-bg/80"
     >
-      <header className="flex justify-between items-center mb-8">
-        <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
-          <h1 className="text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
-            Study Planner
-          </h1>
-          {isPremium && (
-            <span className="px-3 py-1 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white text-sm font-medium rounded-full shadow-md">
-              Premium ✨
-            </span>
-          )}
-        </motion.div>
-        <div className="flex items-center gap-6">
-          {!isPremium && (
-            <motion.a
-              href="/pricing"
-              whileHover={{ scale: 1.05 }}
-              className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
-            >
-              Unlock Premium
-            </motion.a>
-          )}
-          {isSignedIn && userProfile ? (
-            <ProfileMenu user={userProfile} />
-          ) : (
-            <motion.a
-              href="/sign-in"
-              whileHover={{ scale: 1.05 }}
-              className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
-            >
-              Sign In
-            </motion.a>
-          )}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setShowFeedbackModal(true)}
-            className="text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
-          >
-            Feedback
-          </motion.button>
-        </div>
-      </header>
-
-      <motion.div
-        className="flex gap-4 mb-8"
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-      >
-        {["planSetup", "studyPlan"].map((view) => (
-          <motion.button
-            key={view}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
-            className={`flex-1 py-3 px-6 rounded-xl font-semibold text-sm shadow-md transition-all duration-300 ${activeView === view
-                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
-              }`}
-          >
-            {view === "planSetup" ? "Plan Setup" : "Study Plan"}
-          </motion.button>
-        ))}
-      </motion.div>
-
-      <AnimatePresence mode="wait">
-        {activeView === "planSetup" && (
-          <motion.div
-            key="planSetup"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <StudyForm
-              subjects={subjects}
-              setSubjects={setSubjects}
-              freeTimes={freeTimes}
-              setFreeTimes={setFreeTimes}
-              breakDuration={breakDuration}
-              setBreakDuration={setBreakDuration}
-              slotDuration={slotDuration}
-              setSlotDuration={setSlotDuration}
-              maxDailyHours={maxDailyHours}
-              setMaxDailyHours={setMaxDailyHours}
-              onSubmit={handleFormSubmit}
-              templates={savedTemplates}
-              fetchTemplates={fetchTemplatesAsync}
-            />
+      <div className="max-w-6xl mx-auto">
+        <header className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
+          <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
+              Study Planner
+            </h1>
+            {isPremium && (
+              <span className="px-2 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white text-xs sm:text-sm font-medium rounded-full shadow-md">
+                Premium ✨
+              </span>
+            )}
           </motion.div>
-        )}
-        {activeView === "studyPlan" && (
-          <motion.div
-            key="studyPlan"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <StudyPlan
-              schedule={schedule}
-              onToggleComplete={toggleComplete}
-              onClearSchedule={clearSchedule}
-              progress={progress}
-              isGenerating={isGenerating}
-              isPremium={isPremium}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {error && !isGenerating && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-6 p-4 bg-notion-red/10 dark:bg-notion-dark-red/10 text-notion-red dark:text-notion-dark-red rounded-xl border border-notion-red/20 dark:border-notion-dark-red/20 shadow-md"
-          >
-            <p className="text-sm font-medium">{error}</p>
-          </motion.div>
-        )}
-        {warning && !isGenerating && schedule.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="mt-6 p-4 bg-notion-yellow/10 dark:bg-notion-dark-yellow/10 text-notion-yellow dark:text-notion-dark-yellow rounded-xl border border-notion-yellow/20 dark:border-notion-dark-yellow/20 shadow-md"
-          >
-            <p className="text-sm font-medium">{warning}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Banner Ad for Free Users */}
-      {!isPremium && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-6 text-center"
-        >
-          <ins
-            className="adsbygoogle"
-            style={{ display: "inline-block", width: "728px", height: "90px" }}
-            data-ad-client="ca-pub-9139235274050125"
-            data-ad-slot="1670033250"
-            data-adtest="on" // Test mode for local testing
-          />
-        </motion.div>
-      )}
-
-      <AnimatePresence>
-        {showAdModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-notion-dark-card p-8 rounded-2xl shadow-2xl max-w-md w-full border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
-            >
-              <h2 className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-                Advertisement
-              </h2>
-              <ins
-                className="adsbygoogle"
-                style={{ display: "block" }}
-                data-ad-client="ca-pub-9139235274050125"
-                data-ad-slot="6922359933"
-                data-ad-format="auto"
-                data-full-width-responsive="true"
-                data-adtest="on" // Test mode for local testing
-              />
-              <p className="text-notion-text dark:text-notion-dark-text mt-4 text-sm">
-                Generating your plan after this ad. Upgrade to Premium for ad-free planning!
-              </p>
+          <div className="flex items-center gap-2 sm:gap-6 flex-wrap justify-center">
+            {!isPremium && (
               <motion.a
-                whileHover={{ scale: 1.05 }}
                 href="/pricing"
-                className="mt-4 inline-block px-6 py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl font-medium hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+                whileHover={{ scale: 1.05 }}
+                className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
               >
-                Go Premium
+                Unlock Premium
               </motion.a>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Feedback Modal */}
-      <AnimatePresence>
-        {showFeedbackModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-notion-dark-bg text-notion-dark-text p-6 rounded-2xl shadow-2xl max-w-md w-full border border-notion-dark-gray/20 text-center"
+            )}
+            {isSignedIn && userProfile ? (
+              <ProfileMenu user={userProfile} />
+            ) : (
+              <motion.a
+                href="/sign-in"
+                whileHover={{ scale: 1.05 }}
+                className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+              >
+                Sign In
+              </motion.a>
+            )}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setShowFeedbackModal(true)}
+              className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
             >
-              <h2 className="text-xl font-bold mb-4">Your Feedback</h2>
-              <textarea
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                placeholder="Your feedback..."
-                className="w-full h-32 p-2 bg-notion-dark-card text-notion-dark-text border border-notion-dark-gray/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-notion-blue"
+              Feedback
+            </motion.button>
+          </div>
+        </header>
+
+        <motion.div
+          className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6 sm:mb-8"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
+          {["planSetup", "studyPlan"].map((view) => (
+            <motion.button
+              key={view}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
+              className={`w-full sm:flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 ${
+                activeView === view
+                  ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+                  : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+              }`}
+            >
+              {view === "planSetup" ? "Plan Setup" : "Study Plan"}
+            </motion.button>
+          ))}
+        </motion.div>
+
+        <AnimatePresence mode="wait">
+          {activeView === "planSetup" && (
+            <motion.div
+              key="planSetup"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              <StudyForm
+                subjects={subjects}
+                setSubjects={setSubjects}
+                freeTimes={freeTimes}
+                setFreeTimes={setFreeTimes}
+                breakDuration={breakDuration}
+                setBreakDuration={setBreakDuration}
+                slotDuration={slotDuration}
+                setSlotDuration={setSlotDuration}
+                maxDailyHours={maxDailyHours}
+                setMaxDailyHours={setMaxDailyHours}
+                onSubmit={handleFormSubmit}
+                templates={savedTemplates}
+                fetchTemplates={fetchTemplatesAsync}
               />
-              <div className="flex justify-center gap-4 mt-4">
-                {["😊", "🙂", "😐", "😕"].map((emoji) => (
-                  <motion.button
-                    key={emoji}
-                    onClick={() => setFeedbackReaction(emoji)}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    className={`text-2xl p-2 rounded-full transition-all duration-200 ${feedbackReaction === emoji
-                        ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
-                        : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
-                      }`}
-                  >
-                    {emoji}
-                  </motion.button>
-                ))}
-              </div>
-              <div className="mt-4 flex justify-end gap-2">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={() => {
-                    setShowFeedbackModal(false);
-                    setFeedbackText("");
-                    setFeedbackReaction(null);
-                  }}
-                  className="px-4 py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
-                >
-                  Cancel
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  onClick={handleFeedbackSubmit}
-                  className="px-4 py-2 rounded-lg bg-notion-blue text-white hover:bg-notion-blue/90 transition-all duration-200"
-                >
-                  Send
-                </motion.button>
-              </div>
             </motion.div>
+          )}
+          {activeView === "studyPlan" && (
+            <motion.div
+              key="studyPlan"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+              className="w-full"
+            >
+              <StudyPlan
+                schedule={schedule}
+                onToggleComplete={toggleComplete}
+                onClearSchedule={clearSchedule}
+                progress={progress}
+                isGenerating={isGenerating}
+                isPremium={isPremium}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {error && !isGenerating && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 sm:mt-6 p-4 bg-notion-red/10 dark:bg-notion-dark-red/10 text-notion-red dark:text-notion-dark-red rounded-xl border border-notion-red/20 dark:border-notion-dark-red/20 shadow-md text-xs sm:text-sm"
+            >
+              <p className="font-medium">{error}</p>
+            </motion.div>
+          )}
+          {warning && !isGenerating && schedule.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-4 sm:mt-6 p-4 bg-notion-yellow/10 dark:bg-notion-dark-yellow/10 text-notion-yellow dark:text-notion-dark-yellow rounded-xl border border-notion-yellow/20 dark:border-notion-dark-yellow/20 shadow-md text-xs sm:text-sm"
+            >
+              <p className="font-medium">{warning}</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {!isPremium && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 sm:mt-6 text-center"
+          >
+            <ins
+              className="adsbygoogle"
+              style={{ display: "block", width: "100%", height: "90px" }}
+              data-ad-client="ca-pub-9139235274050125"
+              data-ad-slot="1670033250"
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+              data-adtest="on"
+            />
           </motion.div>
         )}
-      </AnimatePresence>
+
+        <AnimatePresence>
+          {showAdModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-white dark:bg-notion-dark-card p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
+              >
+                <h2 className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+                  Advertisement
+                </h2>
+                <ins
+                  className="adsbygoogle"
+                  style={{ display: "block" }}
+                  data-ad-client="ca-pub-9139235274050125"
+                  data-ad-slot="6922359933"
+                  data-ad-format="auto"
+                  data-full-width-responsive="true"
+                  data-adtest="on"
+                />
+                <p className="text-notion-text dark:text-notion-dark-text mt-4 text-xs sm:text-sm">
+                  Generating your plan after this ad. Upgrade to Premium!
+                </p>
+                <motion.a
+                  whileHover={{ scale: 1.05 }}
+                  href="/pricing"
+                  className="mt-4 inline-block px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl font-medium text-xs sm:text-sm hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+                >
+                  Go Premium
+                </motion.a>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showFeedbackModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-notion-dark-bg text-notion-dark-text p-4 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-dark-gray/20 text-center"
+              >
+                <h2 className="text-lg sm:text-xl font-bold mb-4">Your Feedback</h2>
+                <textarea
+                  value={feedbackText}
+                  onChange={(e) => setFeedbackText(e.target.value)}
+                  placeholder="Your feedback..."
+                  className="w-full h-24 sm:h-32 p-2 bg-notion-dark-card text-notion-dark-text border border-notion-dark-gray/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-notion-blue text-sm"
+                />
+                <div className="flex justify-center gap-2 sm:gap-4 mt-4">
+                  {["😊", "🙂", "😐", "😕"].map((emoji) => (
+                    <motion.button
+                      key={emoji}
+                      onClick={() => setFeedbackReaction(emoji)}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.9 }}
+                      className={`text-xl sm:text-2xl p-1 sm:p-2 rounded-full transition-all duration-200 ${
+                        feedbackReaction === emoji
+                          ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
+                          : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
+                      }`}
+                    >
+                      {emoji}
+                    </motion.button>
+                  ))}
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={() => {
+                      setShowFeedbackModal(false);
+                      setFeedbackText("");
+                      setFeedbackReaction(null);
+                    }}
+                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200 text-xs sm:text-sm"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    onClick={handleFeedbackSubmit}
+                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-blue text-white hover:bg-notion-blue/90 transition-all duration-200 text-xs sm:text-sm"
+                  >
+                    Send
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </motion.main>
   );
 }
 
 export default function Planner() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
       <PlannerContent />
     </Suspense>
   );
