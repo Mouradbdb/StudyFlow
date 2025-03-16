@@ -10,9 +10,10 @@ import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import { Edit2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ScheduleSlot {
-  day: string;
+  day: string; // Stored in English (e.g., "Monday")
   start: string;
   end: string;
   subject: string;
@@ -33,7 +34,36 @@ interface CalendarEvent {
   classNames?: string[];
 }
 
-const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+// English day names for internal logic (matches schedule data)
+const dayKeys = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+// Animation variants for smoother transitions
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeInOut" } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: "easeInOut" } },
+};
+
+const buttonVariants = {
+  hover: { scale: 1.05, transition: { duration: 0.2, ease: "easeOut" } },
+  tap: { scale: 0.95, transition: { duration: 0.1 } },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: "easeOut", delay: i * 0.05 },
+  }),
+  hover: { scale: 1.02, transition: { duration: 0.2, ease: "easeOut" } },
+};
+
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { opacity: 1, scale: 1, transition: { duration: 0.25, ease: "easeInOut" } },
+  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2, ease: "easeInOut" } },
+};
 
 export default function ScheduleDisplay({
   schedule: initialSchedule,
@@ -46,6 +76,15 @@ export default function ScheduleDisplay({
   progress: number;
   isPremium: boolean;
 }) {
+  const t = useTranslations("ScheduleDisplay"); // Namespace for schedule display
+  const tCommon = useTranslations("Common"); // Namespace for common translations (days)
+
+  // Map English day names to translated labels for rendering
+  const displayDays = dayKeys.map((day) => ({
+    value: day, // English value for internal use
+    label: tCommon(`days.${day}`), // Translated label for display
+  }));
+
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
@@ -65,9 +104,10 @@ export default function ScheduleDisplay({
       return sum + (endH + endM / 60 - (startH + startM / 60));
     }, 0);
 
-  const groupedSchedule = days.map((day) => ({
-    day,
-    slots: schedule.filter((slot) => slot.day === day),
+  // Group schedule using translated labels but filter by English keys
+  const groupedSchedule = displayDays.map(({ value, label }) => ({
+    day: label, // Translated name for rendering
+    slots: schedule.filter((slot) => slot.day === value), // English key for logic
   }));
 
   const calculateTimeRange = (slots: ScheduleSlot[]) => {
@@ -100,7 +140,7 @@ export default function ScheduleDisplay({
       .map((slot, originalIndex) => ({ slot, originalIndex }))
       .filter(({ slot }) => slot.subject !== "Break")
       .map(({ slot, originalIndex }) => {
-        const dayIndex = days.indexOf(slot.day);
+        const dayIndex = dayKeys.indexOf(slot.day); // Use English key for logic
         const eventDate = new Date(startOfWeek);
         eventDate.setDate(startOfWeek.getDate() + dayIndex);
         const startTime = `${slot.start}:00`;
@@ -174,7 +214,7 @@ export default function ScheduleDisplay({
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) {
       console.error("User fetch error:", userError.message);
-      toast.error("Failed to save notes.");
+      toast.error(t("notesFailed"));
     } else if (user) {
       const weekStart = new Date();
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
@@ -188,15 +228,14 @@ export default function ScheduleDisplay({
         );
       if (error) {
         console.error("Upsert error:", error.message);
-        toast.error("Failed to save notes to schedule.");
+        toast.error(t("notesFailed"));
       } else {
-        toast.success("Notes saved!");
+        toast.success(t("notesSaved"));
         closeNotesModal();
       }
     }
   };
 
-  // Improved preprocessing function to ensure list separation
   const preprocessMarkdown = (markdown: string): string => {
     if (!markdown) return markdown;
 
@@ -214,13 +253,12 @@ export default function ScheduleDisplay({
         inList = true;
         processedLines.push(currentLine);
       } else if (inList && !isEmptyLine && trimmedLine) {
-        // If we're exiting a list and the current line is non-empty text, add a blank line
-        processedLines.push(""); // Explicit blank line to terminate the list
+        processedLines.push("");
         processedLines.push(currentLine);
         inList = false;
       } else {
         processedLines.push(currentLine);
-        inList = false; // Reset inList if we hit an empty line or non-list content
+        inList = false;
       }
     }
 
@@ -230,73 +268,68 @@ export default function ScheduleDisplay({
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
         className="mt-4 sm:mt-6 md:mt-10 w-full"
       >
         <div className="flex flex-col justify-between items-center mb-4 sm:mb-6 gap-4">
           <motion.h2
             initial={{ x: -20 }}
             animate={{ x: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             className="text-lg sm:text-xl md:text-2xl font-bold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red"
           >
-            Your Weekly Study Plan
+            {t("title")}
           </motion.h2>
           <div className="flex gap-2 sm:gap-3">
             {["list", "calendar"].map((mode) => (
               <motion.button
                 key={mode}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                variants={buttonVariants}
+                whileHover="hover"
+                whileTap="tap"
                 onClick={() => handleViewChange(mode as "list" | "calendar")}
                 className={`px-2 py-1 sm:px-3 sm:py-2 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 ${viewMode === mode
-                  ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-                  : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+                    ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+                    : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
                   }`}
               >
-                {mode === "list" ? "List View" : "Calendar View"}
+                {t(`${mode}View`)}
               </motion.button>
             ))}
           </div>
         </div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
           className="mb-4 sm:mb-6 bg-white dark:bg-notion-dark-card p-3 sm:p-4 rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
         >
           <div className="flex flex-col sm:flex-row justify-between items-center text-notion-text dark:text-notion-dark-text text-xs sm:text-sm gap-2 sm:gap-0">
-            <span>
-              Total Study Hours: <span className="font-medium">{totalHours.toFixed(1)}</span>
-            </span>
-            <span>
-              Completed: <span className="font-medium">{Math.round(progress)}%</span>
-            </span>
-            <span>
-              Days Planned:{" "}
-              <span className="font-medium">{groupedSchedule.filter((g) => g.slots.length > 0).length}/7</span>
-            </span>
+            <span>{t("totalStudyHours", { hours: totalHours.toFixed(1) })}</span>
+            <span>{t("completed", { percentage: Math.round(progress) })}</span>
+            <span>{t("daysPlanned", { days: groupedSchedule.filter((g) => g.slots.length > 0).length })}</span>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
           className="mb-4 sm:mb-6"
         >
           <div className="w-full bg-notion-gray/30 dark:bg-notion-dark-gray/30 rounded-full h-2 sm:h-3 overflow-hidden shadow-inner">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: 0.6, ease: "anticipate" }}
               className="bg-gradient-to-r from-notion-blue to-notion-dark-blue h-2 sm:h-3 rounded-full"
             />
           </div>
           <p className="text-xs text-notion-text/70 dark:text-notion-dark-secondary mt-1 sm:mt-2 text-center">
-            {Math.round(progress)}% Complete
+            {t("progress", { percentage: Math.round(progress) })}
           </p>
         </motion.div>
 
@@ -304,19 +337,20 @@ export default function ScheduleDisplay({
           {viewMode === "list" ? (
             <motion.div
               key="list"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
             >
               {groupedSchedule.map(({ day, slots }, index) => (
                 <motion.div
-                  key={day}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
+                  key={dayKeys[index]}
+                  custom={index}
+                  variants={cardVariants}
+                  initial="hidden"
+                  animate="visible"
+                  whileHover="hover"
                   className="bg-white dark:bg-notion-dark-card rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20 p-4 sm:p-6 hover:shadow-lg transition-all duration-300"
                 >
                   <h3 className="text-base sm:text-lg font-semibold text-notion-text dark:text-notion-dark-text mb-3 sm:mb-4">
@@ -334,8 +368,9 @@ export default function ScheduleDisplay({
                         );
                         return (
                           <motion.div
-                            key={`${day}-${i}`}
-                            whileHover={{ scale: 1.02 }}
+                            key={`${dayKeys[index]}-${i}`}
+                            variants={buttonVariants}
+                            whileHover="hover"
                             className={`flex items-center justify-between p-2 sm:p-3 rounded-lg transition-all duration-300 ${slot.completed ? "opacity-60 bg-notion-gray/20 dark:bg-notion-dark-gray/20" : ""
                               }`}
                             style={{ backgroundColor: slot.completed ? undefined : slot.color }}
@@ -363,8 +398,9 @@ export default function ScheduleDisplay({
                                 {slot.start} – {slot.end}
                               </span>
                               <motion.button
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
+                                variants={buttonVariants}
+                                whileHover="hover"
+                                whileTap="tap"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openNotesModal(globalIndex);
@@ -380,7 +416,7 @@ export default function ScheduleDisplay({
                     </div>
                   ) : (
                     <p className="text-notion-text/50 dark:text-notion-dark-secondary italic text-xs sm:text-sm">
-                      No study slots scheduled
+                      {t("noSlots")}
                     </p>
                   )}
                 </motion.div>
@@ -389,10 +425,10 @@ export default function ScheduleDisplay({
           ) : (
             <motion.div
               key="calendar"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
               className="bg-white dark:bg-notion-dark-card p-2 sm:p-4 rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
             >
               <FullCalendar
@@ -441,8 +477,8 @@ export default function ScheduleDisplay({
                     <div className="ml-1 sm:ml-2 flex-shrink-0">
                       <span
                         className={`inline-flex items-center justify-center w-4 h-4 sm:w-5 sm:h-5 rounded-full text-[8px] sm:text-[10px] font-bold ${arg.event.extendedProps.completed
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
+                            ? "bg-green-500 text-white"
+                            : "bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300"
                           }`}
                       >
                         {arg.event.extendedProps.completed ? "✓" : "○"}
@@ -473,28 +509,31 @@ export default function ScheduleDisplay({
               className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
             >
               <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
               >
                 <h3 className="text-lg sm:text-xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">
-                  Notes for {schedule[viewNotesIndex].subject} ({schedule[viewNotesIndex].start} – {schedule[viewNotesIndex].end})
+                  {t("viewNotes", {
+                    subject: schedule[viewNotesIndex].subject,
+                    start: schedule[viewNotesIndex].start,
+                    end: schedule[viewNotesIndex].end,
+                  })}
                 </h3>
                 <div className="text-notion-text dark:text-notion-dark-text text-sm mb-4 min-h-[100px] prose dark:prose-invert max-w-none">
-                  <ReactMarkdown>
-                    {preprocessMarkdown(schedule[viewNotesIndex].notes || "No notes available.")}
-                  </ReactMarkdown>
+                  <ReactMarkdown>{preprocessMarkdown(schedule[viewNotesIndex].notes || t("noNotes"))}</ReactMarkdown>
                 </div>
                 <div className="flex justify-end">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={closeViewNotesModal}
                     className="px-4 py-2 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-lg hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200 text-sm"
                   >
-                    Close
+                    {t("close")}
                   </motion.button>
                 </div>
               </motion.div>
@@ -512,55 +551,60 @@ export default function ScheduleDisplay({
               className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
             >
               <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
               >
                 <h3 className="text-lg sm:text-xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">
-                  Edit Notes for {schedule[selectedSlotIndex].subject} ({schedule[selectedSlotIndex].start} – {schedule[selectedSlotIndex].end})
+                  {t("editNotes", {
+                    subject: schedule[selectedSlotIndex].subject,
+                    start: schedule[selectedSlotIndex].start,
+                    end: schedule[selectedSlotIndex].end,
+                  })}
                 </h3>
                 <div className="flex justify-end mb-2">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={() => setIsPreviewMode(!isPreviewMode)}
                     className="px-3 py-1 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-lg hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200 text-sm"
                   >
-                    {isPreviewMode ? "Edit" : "Preview"}
+                    {isPreviewMode ? t("edit") : t("preview")}
                   </motion.button>
                 </div>
                 {isPreviewMode ? (
                   <div className="w-full p-3 bg-white dark:bg-notion-dark-card text-notion-text dark:text-notion-dark-text rounded-lg border border-notion-gray/20 dark:border-notion-dark-gray/20 min-h-[150px] prose dark:prose-invert max-w-none">
-                    <ReactMarkdown>
-                      {preprocessMarkdown(editingNotes || "Nothing to preview.")}
-                    </ReactMarkdown>
+                    <ReactMarkdown>{preprocessMarkdown(editingNotes || t("noNotes"))}</ReactMarkdown>
                   </div>
                 ) : (
                   <textarea
                     value={editingNotes}
                     onChange={(e) => setEditingNotes(e.target.value)}
-                    placeholder="Enter what you'll study (e.g., Chapter 1, Exercises 1-5). Supports Markdown..."
+                    placeholder={t("notesPlaceholder")}
                     className="w-full p-3 bg-white dark:bg-notion-dark-card text-notion-text dark:text-notion-dark-text rounded-lg border border-notion-gray/20 dark:border-notion-dark-gray/20 focus:ring-2 focus:ring-notion-blue focus:border-transparent resize-y min-h-[150px] transition-all duration-200 shadow-inner font-medium"
                   />
                 )}
                 <div className="flex justify-end gap-2 mt-4">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={closeNotesModal}
                     className="px-4 py-2 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-lg hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200 text-sm"
                   >
-                    Cancel
+                    {t("cancel")}
                   </motion.button>
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={saveNotes}
                     className="px-4 py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-lg hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 text-sm"
                   >
-                    Save
+                    {t("save")}
                   </motion.button>
                 </div>
               </motion.div>
@@ -578,34 +622,36 @@ export default function ScheduleDisplay({
               className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4"
             >
               <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
+                variants={modalVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
                 className="bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
               >
                 <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-                  Unlock Premium Benefits
+                  {t("premiumModal.title")}
                 </h2>
                 <p className="text-notion-text dark:text-notion-dark-text mb-4 sm:mb-6 text-sm sm:text-base leading-relaxed">
-                  Calendar View is a Premium feature. Upgrade to unlock this and more, including unlimited plans and
-                  advanced scheduling!
+                  {t("premiumModal.description")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     onClick={() => setShowPremiumModal(false)}
                     className="w-full sm:flex-1 py-2 sm:py-3 px-4 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-200 text-sm sm:text-base"
                   >
-                    Maybe Later
+                    {t("premiumModal.maybeLater")}
                   </motion.button>
                   <motion.a
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
                     href="/pricing"
                     className="w-full sm:flex-1 py-2 sm:py-3 px-4 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl text-center font-medium hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md text-sm sm:text-base"
                   >
-                    Go Premium
+                    {t("premiumModal.goPremium")}
                   </motion.a>
                 </div>
               </motion.div>
@@ -614,7 +660,6 @@ export default function ScheduleDisplay({
         </AnimatePresence>
       </motion.div>
 
-      {/* Consolidated Styles */}
       <style jsx global>{`
         .fc-timegrid-col {
           min-width: 100px !important;
@@ -671,7 +716,7 @@ export default function ScheduleDisplay({
         .dark .prose-invert li,
         .dark .prose-invert strong,
         .dark .prose-invert em {
-          color: #e5e7eb; /* Tailwind gray-200 for dark mode */
+          color: #e5e7eb;
         }
       `}</style>
     </>

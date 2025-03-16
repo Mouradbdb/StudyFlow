@@ -1,0 +1,311 @@
+{
+    "ScheduleDisplay": {
+        "title": "Votre plan d'étude hebdomadaire",
+        "listView": "Vue en liste",
+        "calendarView": "Vue en calendrier",
+        "totalStudyHours": "Heures d'étude totales : {hours}",
+        "completed": "Terminé : {percentage}%",
+        "daysPlanned": "Jours planifiés : {days}/7",
+        "progress": "{percentage}% terminé",
+        "noSlots": "Aucune plage d'étude planifiée",
+        "sessionNotes": "Notes de la session",
+        "notesPlaceholder": "Entrez ce que vous allez étudier (par exemple, Chapitre 1, Exercices 1-5). Prend en charge Markdown...",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "notesSaved": "Notes enregistrées !",
+        "notesFailed": "Échec de l'enregistrement des notes dans l'horaire.",
+        "editNotes": "Modifier les notes pour {subject} ({start} – {end})",
+        "viewNotes": "Notes pour {subject} ({start} – {end})",
+        "noNotes": "Aucune note disponible.",
+        "preview": "Aperçu",
+        "edit": "Modifier",
+        "close": "Fermer",
+        "premiumModal": {
+            "title": "Débloquez les avantages Premium",
+            "description": "La vue calendrier est une fonctionnalité Premium. Passez à la version Premium pour débloquer cela et plus encore, y compris des plans illimités et une planification avancée !",
+            "maybeLater": "Peut-être plus tard",
+            "goPremium": "Passer à Premium"
+        },
+        "LanguageSwitcher": {
+            "english": "Anglais",
+            "french": "Français"
+        }
+    },
+    "LandingPage": {
+        "hero": {
+            "title": "StudyFlow",
+            "subtitle": "Transformez votre routine d'étude avec fluidité et précision.",
+            "button": "Commencer"
+        },
+        "features": {
+            "title": "Conçu pour votre réussite",
+            "items": [
+                {
+                    "title": "Vue calendrier visuelle",
+                    "description": "Planifiez votre semaine avec un calendrier interactif et élégant qui clarifie vos sessions d'étude."
+                },
+                {
+                    "title": "Limites horaires quotidiennes",
+                    "description": "Équilibrez votre charge de travail avec des limites quotidiennes personnalisables, conçues pour une étude durable."
+                },
+                {
+                    "title": "Régénération intelligente",
+                    "description": "Redessinez votre emploi du temps sans effort en un seul clic pour un plan frais et optimisé."
+                }
+            ]
+        },
+        "cta": {
+            "title": "Élevez votre jeu d'étude",
+            "subtitle": "Rejoignez des milliers d'étudiants qui maîtrisent leurs emplois du temps avec StudyFlow.",
+            "button": "Commencer à planifier maintenant"
+        },
+        "footer": {
+            "text": "© {year} StudyFlow par xAI. Construit avec passion pour une étude plus intelligente."
+        }
+    },
+    "Planner": {
+        "title": "Planificateur d'études",
+        "premiumBadge": "Premium ✨",
+        "unlockPremium": "Débloquer Premium",
+        "signIn": "Se connecter",
+        "feedback": "Retour",
+        "views": {
+            "planSetup": "Configuration du plan",
+            "studyPlan": "Plan d'étude"
+        },
+        "adModal": {
+            "title": "Publicité",
+            "message": "Génération de votre plan après cette publicité. Passez à Premium !",
+            "goPremium": "Passer à Premium"
+        },
+        "feedbackModal": {
+            "title": "Votre retour",
+            "placeholder": "Votre retour...",
+            "cancel": "Annuler",
+            "send": "Envoyer"
+        },
+        "toasts": {
+            "signInRequired": "Veuillez vous connecter pour générer un plan !",
+            "planSaved": "Plan d'étude enregistré !",
+            "planSignInToSave": "Connectez-vous pour enregistrer votre plan d'étude !",
+            "planGenerated": "Plan d'étude généré !",
+            "scheduleCleared": "Emploi du temps effacé !",
+            "loadScheduleFailed": "Échec du chargement de l'horaire de cette semaine.",
+            "newWeek": "Nouvelle semaine commencée ! Entrez votre plan d'étude ou chargez un modèle.",
+            "loadTemplatesFailed": "Échec du chargement des modèles.",
+            "welcomePremium": "Bienvenue à Premium ! Profitez d'une planification sans publicité et plus encore.",
+            "paymentFailed": "Échec de la vérification du paiement : {error}",
+            "premiumUpdateFailed": "Échec de la mise à jour du statut Premium.",
+            "fetchUserFailed": "Erreur lors de la récupération du profil utilisateur : {error}",
+            "fetchPremiumFailed": "Erreur lors de la récupération du statut Premium : {error}",
+            "feedbackEmpty": "Veuillez fournir un retour ou une réaction !",
+            "feedbackFailed": "Échec de l'envoi du retour. Veuillez réessayer.",
+            "feedbackSuccess": "Retour envoyé ! Merci !"
+        }
+    },
+    "ProfileMenu": {
+        "plan": "Plan : ",
+        "premium": "Premium",
+        "free": "Gratuit",
+        "signOut": "Se déconnecter",
+        "toasts": {
+            "signOutSuccess": "Déconnexion réussie !",
+            "signOutFailed": "Échec de la déconnexion : {error}",
+            "signOutError": "Erreur lors de la déconnexion : {error}"
+        }
+    },
+    "StudyForm": {
+        "subjectsTitle": "Sujets",
+        "freeTimeTitle": "Temps libre",
+        "settingsTitle": "Paramètres",
+        "subjectPlaceholder": "par exemple, Maths",
+        "hoursPlaceholder": "Heures",
+        "priorityHigh": "Élevée",
+        "priorityMedium": "Moyenne",
+        "priorityLow": "Basse",
+        "add": "Ajouter",
+        "dayPlaceholder": "Sélectionner un jour",
+        "days": {
+            "Monday": "Lundi",
+            "Tuesday": "Mardi",
+            "Wednesday": "Mercredi",
+            "Thursday": "Jeudi",
+            "Friday": "Vendredi",
+            "Saturday": "Samedi",
+            "Sunday": "Dimanche"
+        },
+        "breakDurationLabel": "Durée de la pause (minutes) :",
+        "slotDurationLabel": "Durée des créneaux d'étude (minutes) :",
+        "maxDailyHoursLabel": "Heures quotidiennes maximum :",
+        "generateStudyPlan": "Générer le plan d'étude",
+        "regenerateStudyPlan": "Regénérer le plan d'étude",
+        "saveAsTemplate": "Enregistrer comme modèle",
+        "loadTemplate": "Charger un modèle",
+        "saveTemplateTitle": "Enregistrer le modèle",
+        "loadTemplateTitle": "Charger le modèle",
+        "templateNamePlaceholder": "par exemple, Temps de Ramadan",
+        "save": "Enregistrer",
+        "load": "Charger",
+        "delete": "Supprimer",
+        "noTemplates": "Aucun modèle enregistré pour le moment.",
+        "toasts": {
+            "invalidSubject": "Veuillez entrer un nom de sujet valide et un nombre d'heures positif !",
+            "invalidFreeTime": "Veuillez remplir tous les champs de temps libre !",
+            "invalidTimeRange": "L'heure de fin doit être après l'heure de début !",
+            "insufficientData": "Veuillez ajouter au moins un sujet et un créneau de temps libre !",
+            "insufficientFreeTime": "Le temps libre total doit être suffisant pour les heures d'étude !",
+            "emptyTemplate": "Les sujets et les temps libres ne peuvent pas être vides !",
+            "noTemplateName": "Veuillez entrer un nom de modèle !",
+            "fetchUserFailed": "Échec de la récupération de l'utilisateur.",
+            "templateExists": "Un modèle portant ce nom existe déjà !",
+            "saveTemplateFailed": "Échec de l'enregistrement du modèle.",
+            "saveTemplateSuccess": "Modèle \"{name}\" enregistré !",
+            "loadTemplateFailed": "Modèle non trouvé !",
+            "loadTemplateSuccess": "Modèle \"{name}\" chargé ! Soumettez pour générer l'horaire.",
+            "deleteTemplateFailed": "Échec de la suppression du modèle.",
+            "deleteTemplateSuccess": "Modèle \"{name}\" supprimé !",
+            "confirmDelete": "Êtes-vous sûr de vouloir supprimer \"{name}\" ?"
+        }
+    },
+    "StudyPlan": {
+        "title": "Plan d'étude",
+        "export": "Exporter",
+        "exportTo": "Exporter vers {format}",
+        "clearSchedule": "Effacer l'horaire",
+        "generating": "Génération de votre plan d'étude en cours...",
+        "noPlan": "Aucun plan d'étude généré pour le moment. Allez à la configuration du plan pour en créer un.",
+        "premiumModal": {
+            "title": "Passer à Premium",
+            "description": "Exporter votre plan d'étude est une fonctionnalité Premium. Passez à Premium pour débloquer ceci et plus encore !",
+            "cancel": "Annuler",
+            "upgrade": "Mettre à niveau maintenant"
+        },
+        "toasts": {
+            "noSchedule": "Aucun horaire à exporter !",
+            "exportCSVSuccess": "Horaire exporté en CSV !",
+            "exportPDFSuccess": "Horaire exporté en PDF !",
+            "exportICSSuccess": "Horaire exporté en ICS !"
+        }
+    },
+    "Pricing": {
+        "title": "Débloquez Votre Plein Potentiel",
+        "subtitle": "Choisissez le plan qui booste votre expérience d'étude avec des fonctionnalités puissantes.",
+        "freePlan": {
+            "title": "Gratuit",
+            "description": "Parfait pour commencer.",
+            "features": [
+                "Fonctionnalités de planification de base",
+                "Enregistrez votre progression",
+                "Avec publicités",
+                "Plans d'étude limités",
+                "Modèles de base uniquement",
+                "Support standard"
+            ],
+            "price": "0 $ / pour toujours",
+            "currentPlan": "Plan Actuel",
+            "goToPlanner": "Aller au Planificateur"
+        },
+        "premiumPlan": {
+            "title": "Premium",
+            "description": "Pour les étudiants sérieux qui veulent plus.",
+            "recommended": "Recommandé",
+            "features": [
+                "Enregistrez des modèles illimités",
+                "Support prioritaire par email",
+                "Sans publicités",
+                "Accès anticipé aux nouvelles fonctionnalités"
+            ],
+            "price": "2,99 $ / paiement unique",
+            "yourPlan": "Votre Plan",
+            "unlockButton": "Débloquer Premium Maintenant"
+        },
+        "testimonialsTitle": "Ce Que Disent Nos Utilisateurs",
+        "testimonials": [
+            {
+                "quote": "StudyFlow Premium a doublé ma productivité !",
+                "author": "Sarah, Étudiante"
+            },
+            {
+                "quote": "Les plans illimités ont changé ma façon d'étudier !",
+                "author": "Ahmed, Développeur"
+            },
+            {
+                "quote": "Le meilleur investissement pour mes notes.",
+                "author": "Maria, Chercheuse"
+            }
+        ],
+        "footer": {
+            "text": "Des questions ? Contactez-nous à {email}.",
+            "email": "support@studyflow.com"
+        },
+        "toasts": {
+            "signInRequired": "Veuillez vous connecter pour mettre à niveau !",
+            "alreadyPremium": "Vous êtes déjà un utilisateur premium !",
+            "redirecting": "Redirection vers PayPal...",
+            "errorCheckingStatus": "Erreur lors de la vérification de votre statut.",
+            "errorUpgrading": "Erreur lors de la mise à niveau : {message}"
+        }
+    },
+    "SignIn": {
+        "title": "Connexion",
+        "emailLabel": "Email",
+        "emailPlaceholder": "vous@exemple.com",
+        "passwordLabel": "Mot de passe",
+        "passwordPlaceholder": "••••••••",
+        "signInButton": "Se connecter",
+        "forgotPassword": "Mot de passe oublié ?",
+        "noAccount": "Vous n’avez pas de compte ?",
+        "signUpLink": "S’inscrire",
+        "resetTitle": "Réinitialiser le mot de passe",
+        "resetEmailLabel": "Email",
+        "cancelButton": "Annuler",
+        "resetButton": "Envoyer le lien de réinitialisation",
+        "toasts": {
+            "signInError": "Échec de la connexion : {message}",
+            "signInSuccess": "Connexion réussie !",
+            "resetError": "Échec de la réinitialisation : {message}",
+            "resetSuccess": "Email de réinitialisation envoyé ! Vérifiez votre boîte de réception."
+        }
+    },
+    "SignUp": {
+        "title": "Inscription",
+        "emailLabel": "Email",
+        "emailPlaceholder": "vous@exemple.com",
+        "passwordLabel": "Mot de passe",
+        "passwordPlaceholder": "••••••••",
+        "signUpButton": "S’inscrire",
+        "hasAccount": "Vous avez déjà un compte ?",
+        "signInLink": "Se connecter",
+        "toasts": {
+            "signUpError": "Échec de l’inscription : {message}",
+            "signUpSuccess": "Inscription réussie ! Vérifiez votre email pour confirmer."
+        }
+    },
+    "ResetPassword": {
+        "title": "Réinitialiser le mot de passe",
+        "newPasswordLabel": "Nouveau mot de passe",
+        "confirmPasswordLabel": "Confirmer le nouveau mot de passe",
+        "passwordPlaceholder": "••••••••",
+        "updateButton": "Mettre à jour le mot de passe",
+        "backTo": "Retour à",
+        "signInLink": "Connexion",
+        "toasts": {
+            "invalidLink": "Lien de réinitialisation invalide ou expiré.",
+            "passwordMismatch": "Les mots de passe ne correspondent pas !",
+            "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères !",
+            "resetError": "Échec de la réinitialisation : {message}",
+            "resetSuccess": "Mot de passe réinitialisé avec succès ! Veuillez vous connecter."
+        }
+    },
+    "Common": {
+        "days": {
+            "Monday": "Lundi",
+            "Tuesday": "Mardi",
+            "Wednesday": "Mercredi",
+            "Thursday": "Jeudi",
+            "Friday": "Vendredi",
+            "Saturday": "Samedi",
+            "Sunday": "Dimanche"
+        }
+    }
+}

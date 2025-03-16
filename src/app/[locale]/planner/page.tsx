@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import StudyForm from "../components/StudyForm";
-import StudyPlan from "../components/StudyPlan";
-import { generateSchedule, ScheduleSlot } from "../utils/scheduler";
+import StudyForm from "../../components/StudyForm";
+import StudyPlan from "../../components/StudyPlan";
+import { generateSchedule, ScheduleSlot } from "../../utils/scheduler";
 import { toast } from "sonner";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
-import ProfileMenu from "../components/ProfileMenu";
+import ProfileMenu from "../../components/ProfileMenu";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface Subject {
   name: string;
@@ -38,6 +39,8 @@ declare global {
 }
 
 function PlannerContent() {
+  const t = useTranslations("Planner"); // Access "Planner" namespace
+  const tToasts = useTranslations("Planner.toasts"); // For toast messages
   const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,10 +83,10 @@ function PlannerContent() {
 
         if (authError) {
           console.error("Error fetching auth user:", authError.message);
-          toast.error("Error fetching user profile: " + authError.message);
+          toast.error(tToasts("fetchUserFailed", { error: authError.message }));
         } else if (userError) {
           console.error("Error fetching premium status:", userError.message);
-          toast.error("Error fetching premium status: " + userError.message);
+          toast.error(tToasts("fetchPremiumFailed", { error: userError.message }));
         } else if (authUser && userData && userData.length > 0) {
           setUserProfile({ email: authUser.user.email || "", is_premium: userData[0].is_premium || false });
           setIsPremium(userData[0].is_premium || false);
@@ -108,10 +111,10 @@ function PlannerContent() {
                 .eq("id", session.user.id);
               if (updateError) {
                 console.error("Error updating user to premium:", updateError.message);
-                toast.error("Failed to update premium status.");
+                toast.error(tToasts("premiumUpdateFailed"));
               } else {
                 console.log("Payment verified, user updated to premium");
-                toast.success("Welcome to Premium! Enjoy ad-free planning and more.");
+                toast.success(tToasts("welcomePremium"));
                 setIsPremium(true);
                 setUserProfile((prev) => prev ? { ...prev, is_premium: true } : null);
                 router.replace("/planner");
@@ -120,7 +123,7 @@ function PlannerContent() {
           } else {
             const { error } = await res.json();
             console.error("Payment verification failed:", error);
-            toast.error("Payment verification failed: " + error);
+            toast.error(tToasts("paymentFailed", { error }));
           }
         }
       }
@@ -142,10 +145,10 @@ function PlannerContent() {
 
         if (authError) {
           console.error("Error fetching auth user on auth change:", authError.message);
-          toast.error("Error fetching user profile: " + authError.message);
+          toast.error(tToasts("fetchUserFailed", { error: authError.message }));
         } else if (userError) {
           console.error("Error fetching premium status on auth change:", userError.message);
-          toast.error("Error fetching premium status: " + userError.message);
+          toast.error(tToasts("fetchPremiumFailed", { error: userError.message }));
         } else if (authUser && userData && userData.length > 0) {
           setUserProfile({ email: authUser.user.email || "", is_premium: userData[0].is_premium || false });
           setIsPremium(userData[0].is_premium || false);
@@ -161,7 +164,7 @@ function PlannerContent() {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [router, searchParams]);
+  }, [router, searchParams, tToasts]);
 
   useEffect(() => {
     if (!isPremium) {
@@ -193,13 +196,13 @@ function PlannerContent() {
       .limit(1);
     if (error) {
       console.error("Fetch schedule error:", error.message);
-      toast.error("Failed to load this week's schedule.");
+      toast.error(tToasts("loadScheduleFailed"));
     } else if (data && data.length > 0) {
       setSchedule(data[0].schedule);
-      toast.success("Loaded your saved study plan!");
+      toast.success(tToasts("planSaved"));
     } else {
       setSchedule([]);
-      toast.info("New week started! Enter your study plan or load a template.");
+      toast.info(tToasts("newWeek"));
     }
   };
 
@@ -211,7 +214,7 @@ function PlannerContent() {
       .order("created_at", { ascending: false });
     if (error) {
       console.error("Fetch templates error:", error.message);
-      toast.error("Failed to load templates.");
+      toast.error(tToasts("loadTemplatesFailed"));
     } else {
       setSavedTemplates(data || []);
     }
@@ -234,7 +237,7 @@ function PlannerContent() {
   ) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      toast.error("Please sign in to generate a plan!");
+      toast.error(tToasts("signInRequired"));
       return;
     }
 
@@ -269,18 +272,18 @@ function PlannerContent() {
               );
             if (upsertError) {
               console.error("Upsert schedule error:", upsertError.message);
-              toast.error("Failed to save study plan.");
+              toast.error(tToasts("loadScheduleFailed"));
               throw upsertError;
             }
-            toast.success("Study plan saved!");
+            toast.success(tToasts("planSaved"));
           }
         } else {
-          toast.info("Sign in to save your study plan!");
+          toast.info(tToasts("planSignInToSave"));
         }
 
         console.warn = originalWarn;
         if (warningMessage) setWarning(warningMessage);
-        toast.success("Study plan generated!");
+        toast.success(tToasts("planGenerated"));
         if (activeView === "planSetup") {
           setActiveView("studyPlan");
         }
@@ -327,11 +330,11 @@ function PlannerContent() {
           .eq("week_start", weekStart);
         if (deleteError) {
           console.error("Delete error:", deleteError.message);
-          toast.error("Failed to clear schedule.");
+          toast.error(tToasts("loadScheduleFailed"));
         }
       }
     }
-    toast.success("Schedule cleared!");
+    toast.success(tToasts("scheduleCleared"));
   };
 
   const toggleComplete = (index: number) => {
@@ -353,7 +356,7 @@ function PlannerContent() {
             .then(({ error }) => {
               if (error) {
                 console.error("Upsert error:", error.message);
-                toast.error("Failed to update schedule.");
+                toast.error(tToasts("loadScheduleFailed"));
               }
             });
         }
@@ -373,7 +376,7 @@ function PlannerContent() {
   const handleFeedbackSubmit = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!feedbackText.trim() && !feedbackReaction) {
-      toast.error("Please provide feedback or a reaction!");
+      toast.error(tToasts("feedbackEmpty"));
       return;
     }
 
@@ -387,9 +390,9 @@ function PlannerContent() {
     const { error } = await supabase.from("feedback").insert(feedbackData);
     if (error) {
       console.error("Feedback submission error:", error.message);
-      toast.error("Failed to submit feedback. Please try again.");
+      toast.error(tToasts("feedbackFailed"));
     } else {
-      toast.success("Feedback submitted! Thank you!");
+      toast.success(tToasts("feedbackSuccess"));
       setFeedbackText("");
       setFeedbackReaction(null);
       setShowFeedbackModal(false);
@@ -407,11 +410,11 @@ function PlannerContent() {
         <header className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
           <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
             <h1 className="text-2xl sm:text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
-              Study Planner
+              {t("title")}
             </h1>
             {isPremium && (
               <span className="px-2 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white text-xs sm:text-sm font-medium rounded-full shadow-md">
-                Premium ✨
+                {t("premiumBadge")}
               </span>
             )}
           </motion.div>
@@ -422,7 +425,7 @@ function PlannerContent() {
                 whileHover={{ scale: 1.05 }}
                 className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
               >
-                Unlock Premium
+                {t("unlockPremium")}
               </motion.a>
             )}
             {isSignedIn && userProfile ? (
@@ -433,7 +436,7 @@ function PlannerContent() {
                 whileHover={{ scale: 1.05 }}
                 className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
               >
-                Sign In
+                {t("signIn")}
               </motion.a>
             )}
             <motion.button
@@ -441,7 +444,7 @@ function PlannerContent() {
               onClick={() => setShowFeedbackModal(true)}
               className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
             >
-              Feedback
+              {t("feedback")}
             </motion.button>
           </div>
         </header>
@@ -458,13 +461,12 @@ function PlannerContent() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
-              className={`w-full sm:flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 ${
-                activeView === view
-                  ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-                  : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
-              }`}
+              className={`w-full sm:flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 ${activeView === view
+                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
+                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+                }`}
             >
-              {view === "planSetup" ? "Plan Setup" : "Study Plan"}
+              {t(`views.${view}`)}
             </motion.button>
           ))}
         </motion.div>
@@ -573,7 +575,7 @@ function PlannerContent() {
                 className="bg-white dark:bg-notion-dark-card p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
               >
                 <h2 className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-                  Advertisement
+                  {t("adModal.title")}
                 </h2>
                 <ins
                   className="adsbygoogle"
@@ -585,14 +587,14 @@ function PlannerContent() {
                   data-adtest="on"
                 />
                 <p className="text-notion-text dark:text-notion-dark-text mt-4 text-xs sm:text-sm">
-                  Generating your plan after this ad. Upgrade to Premium!
+                  {t("adModal.message")}
                 </p>
                 <motion.a
                   whileHover={{ scale: 1.05 }}
                   href="/pricing"
                   className="mt-4 inline-block px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl font-medium text-xs sm:text-sm hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
                 >
-                  Go Premium
+                  {t("adModal.goPremium")}
                 </motion.a>
               </motion.div>
             </motion.div>
@@ -613,11 +615,11 @@ function PlannerContent() {
                 exit={{ scale: 0.95, opacity: 0 }}
                 className="bg-notion-dark-bg text-notion-dark-text p-4 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-dark-gray/20 text-center"
               >
-                <h2 className="text-lg sm:text-xl font-bold mb-4">Your Feedback</h2>
+                <h2 className="text-lg sm:text-xl font-bold mb-4">{t("feedbackModal.title")}</h2>
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
-                  placeholder="Your feedback..."
+                  placeholder={t("feedbackModal.placeholder")}
                   className="w-full h-24 sm:h-32 p-2 bg-notion-dark-card text-notion-dark-text border border-notion-dark-gray/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-notion-blue text-sm"
                 />
                 <div className="flex justify-center gap-2 sm:gap-4 mt-4">
@@ -627,11 +629,10 @@ function PlannerContent() {
                       onClick={() => setFeedbackReaction(emoji)}
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.9 }}
-                      className={`text-xl sm:text-2xl p-1 sm:p-2 rounded-full transition-all duration-200 ${
-                        feedbackReaction === emoji
-                          ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
-                          : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
-                      }`}
+                      className={`text-xl sm:text-2xl p-1 sm:p-2 rounded-full transition-all duration-200 ${feedbackReaction === emoji
+                        ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
+                        : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
+                        }`}
                     >
                       {emoji}
                     </motion.button>
@@ -647,14 +648,14 @@ function PlannerContent() {
                     }}
                     className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200 text-xs sm:text-sm"
                   >
-                    Cancel
+                    {t("feedbackModal.cancel")}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleFeedbackSubmit}
                     className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-blue text-white hover:bg-notion-blue/90 transition-all duration-200 text-xs sm:text-sm"
                   >
-                    Send
+                    {t("feedbackModal.send")}
                   </motion.button>
                 </div>
               </motion.div>

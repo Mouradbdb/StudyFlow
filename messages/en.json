@@ -1,0 +1,311 @@
+{
+  "Common": {
+    "days": {
+      "Monday": "Monday",
+      "Tuesday": "Tuesday",
+      "Wednesday": "Wednesday",
+      "Thursday": "Thursday",
+      "Friday": "Friday",
+      "Saturday": "Saturday",
+      "Sunday": "Sunday"
+    }
+  },
+  "ScheduleDisplay": {
+    "title": "Your Weekly Study Plan",
+    "listView": "List View",
+    "calendarView": "Calendar View",
+    "totalStudyHours": "Total Study Hours: {hours}",
+    "completed": "Completed: {percentage}%",
+    "daysPlanned": "Days Planned: {days}/7",
+    "progress": "{percentage}% Complete",
+    "noSlots": "No study slots scheduled",
+    "sessionNotes": "Session Notes",
+    "notesPlaceholder": "Enter what you'll study (e.g., Chapter 1, Exercises 1-5). Supports Markdown...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "notesSaved": "Notes saved!",
+    "notesFailed": "Failed to save notes to schedule.",
+    "editNotes": "Edit Notes for {subject} ({start} – {end})",
+    "viewNotes": "Notes for {subject} ({start} – {end})",
+    "noNotes": "No notes available.",
+    "preview": "Preview",
+    "edit": "Edit",
+    "close": "Close",
+    "premiumModal": {
+      "title": "Unlock Premium Benefits",
+      "description": "Calendar View is a Premium feature. Upgrade to unlock this and more, including unlimited plans and advanced scheduling!",
+      "maybeLater": "Maybe Later",
+      "goPremium": "Go Premium"
+    },
+    "LanguageSwitcher": {
+      "english": "English",
+      "french": "French"
+    }
+  },
+  "LandingPage": {
+    "hero": {
+      "title": "StudyFlow",
+      "subtitle": "Transform your study routine with flow and precision.",
+      "button": "Get Started"
+    },
+    "features": {
+      "title": "Crafted for Your Success",
+      "items": [
+        {
+          "title": "Visual Calendar View",
+          "description": "Plan your week with a sleek, interactive calendar that brings clarity to your study sessions."
+        },
+        {
+          "title": "Daily Hour Limits",
+          "description": "Balance your workload with customizable daily caps, designed for sustainable studying."
+        },
+        {
+          "title": "Smart Regeneration",
+          "description": "Redesign your schedule effortlessly with a single click for a fresh, optimized plan."
+        }
+      ]
+    },
+    "cta": {
+      "title": "Elevate Your Study Game",
+      "subtitle": "Join thousands of students mastering their schedules with StudyFlow.",
+      "button": "Start Planning Now"
+    },
+    "footer": {
+      "text": "© {year} StudyFlow by xAI. Built with passion for smarter studying."
+    }
+  },
+  "Planner": {
+    "title": "Study Planner",
+    "premiumBadge": "Premium ✨",
+    "unlockPremium": "Unlock Premium",
+    "signIn": "Sign In",
+    "feedback": "Feedback",
+    "views": {
+      "planSetup": "Plan Setup",
+      "studyPlan": "Study Plan"
+    },
+    "adModal": {
+      "title": "Advertisement",
+      "message": "Generating your plan after this ad. Upgrade to Premium!",
+      "goPremium": "Go Premium"
+    },
+    "feedbackModal": {
+      "title": "Your Feedback",
+      "placeholder": "Your feedback...",
+      "cancel": "Cancel",
+      "send": "Send"
+    },
+    "toasts": {
+      "signInRequired": "Please sign in to generate a plan!",
+      "planSaved": "Study plan saved!",
+      "planSignInToSave": "Sign in to save your study plan!",
+      "planGenerated": "Study plan generated!",
+      "scheduleCleared": "Schedule cleared!",
+      "loadScheduleFailed": "Failed to load this week's schedule.",
+      "newWeek": "New week started! Enter your study plan or load a template.",
+      "loadTemplatesFailed": "Failed to load templates.",
+      "welcomePremium": "Welcome to Premium! Enjoy ad-free planning and more.",
+      "paymentFailed": "Payment verification failed: {error}",
+      "premiumUpdateFailed": "Failed to update premium status.",
+      "fetchUserFailed": "Error fetching user profile: {error}",
+      "fetchPremiumFailed": "Error fetching premium status: {error}",
+      "feedbackEmpty": "Please provide feedback or a reaction!",
+      "feedbackFailed": "Failed to submit feedback. Please try again.",
+      "feedbackSuccess": "Feedback submitted! Thank you!"
+    }
+  },
+  "ProfileMenu": {
+    "plan": "Plan: ",
+    "premium": "Premium",
+    "free": "Free",
+    "signOut": "Sign Out",
+    "toasts": {
+      "signOutSuccess": "Signed out successfully!",
+      "signOutFailed": "Failed to sign out: {error}",
+      "signOutError": "Error signing out: {error}"
+    }
+  },
+  "StudyForm": {
+    "subjectsTitle": "Subjects",
+    "freeTimeTitle": "Free Time",
+    "settingsTitle": "Settings",
+    "subjectPlaceholder": "e.g., Math",
+    "hoursPlaceholder": "Hours",
+    "priorityHigh": "High",
+    "priorityMedium": "Medium",
+    "priorityLow": "Low",
+    "add": "Add",
+    "dayPlaceholder": "Select Day",
+    "days": {
+      "Monday": "Monday",
+      "Tuesday": "Tuesday",
+      "Wednesday": "Wednesday",
+      "Thursday": "Thursday",
+      "Friday": "Friday",
+      "Saturday": "Saturday",
+      "Sunday": "Sunday"
+    },
+    "breakDurationLabel": "Break Duration (minutes):",
+    "slotDurationLabel": "Study Slot Duration (minutes):",
+    "maxDailyHoursLabel": "Max Daily Hours:",
+    "generateStudyPlan": "Generate Study Plan",
+    "regenerateStudyPlan": "Regenerate Study Plan",
+    "saveAsTemplate": "Save as Template",
+    "loadTemplate": "Load Template",
+    "saveTemplateTitle": "Save Template",
+    "loadTemplateTitle": "Load Template",
+    "templateNamePlaceholder": "e.g., Ramadan Time",
+    "save": "Save",
+    "load": "Load",
+    "delete": "Delete",
+    "noTemplates": "No templates saved yet.",
+    "toasts": {
+      "invalidSubject": "Please enter a valid subject name and positive hours!",
+      "invalidFreeTime": "Please fill in all free time fields!",
+      "invalidTimeRange": "End time must be after start time!",
+      "insufficientData": "Please add at least one subject and one free time slot!",
+      "insufficientFreeTime": "Total free time must be sufficient for study hours!",
+      "emptyTemplate": "Subjects and free times cannot be empty!",
+      "noTemplateName": "Please enter a template name!",
+      "fetchUserFailed": "Failed to fetch user.",
+      "templateExists": "A template with this name already exists!",
+      "saveTemplateFailed": "Failed to save template.",
+      "saveTemplateSuccess": "Template \"{name}\" saved!",
+      "loadTemplateFailed": "Template not found!",
+      "loadTemplateSuccess": "Loaded template \"{name}\"! Submit to generate the schedule.",
+      "deleteTemplateFailed": "Failed to delete template.",
+      "deleteTemplateSuccess": "Template \"{name}\" deleted!",
+      "confirmDelete": "Are you sure you want to delete \"{name}\"?"
+    }
+  },
+  "StudyPlan": {
+    "title": "Study Plan",
+    "export": "Export",
+    "exportTo": "Export to {format}",
+    "clearSchedule": "Clear Schedule",
+    "generating": "Generating your study plan...",
+    "noPlan": "No study plan generated yet. Go to Plan Setup to create one.",
+    "premiumModal": {
+      "title": "Upgrade to Premium",
+      "description": "Exporting your study plan is a premium feature. Upgrade to unlock this and more!",
+      "cancel": "Cancel",
+      "upgrade": "Upgrade Now"
+    },
+    "toasts": {
+      "noSchedule": "No schedule to export!",
+      "exportCSVSuccess": "Schedule exported as CSV!",
+      "exportPDFSuccess": "Schedule exported as PDF!",
+      "exportICSSuccess": "Schedule exported as ICS!"
+    }
+  },
+  "Pricing": {
+    "title": "Unlock Your Full Potential",
+    "subtitle": "Choose the plan that supercharges your study experience with powerful features.",
+    "freePlan": {
+      "title": "Free",
+      "description": "Perfect for getting started.",
+      "features": [
+        "Basic scheduling features",
+        "Save your progress",
+        "With ads",
+        "Limited study plans",
+        "Basic templates only",
+        "Standard support"
+      ],
+      "price": "$0 / forever",
+      "currentPlan": "Current Plan",
+      "goToPlanner": "Go to Planner"
+    },
+    "premiumPlan": {
+      "title": "Premium",
+      "description": "For serious students who want more.",
+      "recommended": "Recommended",
+      "features": [
+        "Save unlimited templates",
+        "Priority email support",
+        "No ads",
+        "Early access to new features"
+      ],
+      "price": "$2.99 / one-time",
+      "yourPlan": "Your Plan",
+      "unlockButton": "Unlock Premium Now"
+    },
+    "testimonialsTitle": "What Our Users Say",
+    "testimonials": [
+      {
+        "quote": "StudyFlow Premium doubled my productivity!",
+        "author": "Sarah, Student"
+      },
+      {
+        "quote": "Unlimited plans changed how I study!",
+        "author": "Ahmed, Developer"
+      },
+      {
+        "quote": "The best investment for my grades.",
+        "author": "Maria, Researcher"
+      }
+    ],
+    "footer": {
+      "text": "Questions? Contact us at {email}.",
+      "email": "support@studyflow.com"
+    },
+    "toasts": {
+      "signInRequired": "Please sign in to upgrade!",
+      "alreadyPremium": "You’re already a premium user!",
+      "redirecting": "Redirecting to PayPal...",
+      "errorCheckingStatus": "Error checking your status.",
+      "errorUpgrading": "Error upgrading: {message}"
+    }
+  },
+  "SignIn": {
+    "title": "Sign In",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "signInButton": "Sign In",
+    "forgotPassword": "Forgot Password?",
+    "noAccount": "Don’t have an account?",
+    "signUpLink": "Sign Up",
+    "resetTitle": "Reset Password",
+    "resetEmailLabel": "Email",
+    "cancelButton": "Cancel",
+    "resetButton": "Send Reset Link",
+    "toasts": {
+      "signInError": "Sign in failed: {message}",
+      "signInSuccess": "Signed in successfully!",
+      "resetError": "Reset failed: {message}",
+      "resetSuccess": "Password reset email sent! Check your inbox."
+    }
+  },
+  "SignUp": {
+    "title": "Sign Up",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••",
+    "signUpButton": "Sign Up",
+    "hasAccount": "Already have an account?",
+    "signInLink": "Sign In",
+    "toasts": {
+      "signUpError": "Sign up failed: {message}",
+      "signUpSuccess": "Signed up successfully! Check your email to confirm."
+    }
+  },
+  "ResetPassword": {
+    "title": "Reset Password",
+    "newPasswordLabel": "New Password",
+    "confirmPasswordLabel": "Confirm New Password",
+    "passwordPlaceholder": "••••••••",
+    "updateButton": "Update Password",
+    "backTo": "Back to",
+    "signInLink": "Sign In",
+    "toasts": {
+      "invalidLink": "Invalid or expired reset link.",
+      "passwordMismatch": "Passwords do not match!",
+      "passwordTooShort": "Password must be at least 6 characters long!",
+      "resetError": "Reset failed: {message}",
+      "resetSuccess": "Password reset successfully! Please sign in."
+    }
+  }
+}

@@ -4,13 +4,16 @@ import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion"; // Added for animations
+import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface ProfileMenuProps {
     user: { email: string; is_premium: boolean };
 }
 
 export default function ProfileMenu({ user }: ProfileMenuProps) {
+    const t = useTranslations("ProfileMenu"); // Access "ProfileMenu" namespace
+    const tToasts = useTranslations("ProfileMenu.toasts"); // For toast messages
     const [isOpen, setIsOpen] = useState(false);
     const router = useRouter();
 
@@ -20,15 +23,15 @@ export default function ProfileMenu({ user }: ProfileMenuProps) {
             const { error } = await supabase.auth.signOut();
             if (error) {
                 console.error("Sign out error:", error.message);
-                toast.error("Failed to sign out: " + error.message);
+                toast.error(tToasts("signOutFailed", { error: error.message }));
                 return;
             }
             console.log("Sign out successful");
-            toast.success("Signed out successfully!");
+            toast.success(tToasts("signOutSuccess"));
             router.push("/sign-in");
         } catch (error) {
             console.error("Unexpected error during sign out:", error);
-            toast.error("Error signing out: " + (error instanceof Error ? error.message : "Unknown error"));
+            toast.error(tToasts("signOutError", { error: error instanceof Error ? error.message : "Unknown error" }));
         }
     };
 
@@ -72,9 +75,9 @@ export default function ProfileMenu({ user }: ProfileMenuProps) {
                                         {user.email}
                                     </p>
                                     <p className="text-xs text-notion-gray-text dark:text-notion-dark-gray-text">
-                                        Plan:{" "}
+                                        {t("plan")}
                                         <span className={user.is_premium ? "text-notion-blue" : "text-notion-gray"}>
-                                            {user.is_premium ? "Premium" : "Free"}
+                                            {user.is_premium ? t("premium") : t("free")}
                                         </span>
                                     </p>
                                 </div>
@@ -86,7 +89,7 @@ export default function ProfileMenu({ user }: ProfileMenuProps) {
                                 onClick={handleSignOut}
                                 className="w-full py-2 px-4 bg-gradient-to-r from-notion-red to-notion-red/80 dark:from-notion-dark-red dark:to-notion-dark-red/80 text-white rounded-lg text-sm font-medium hover:from-notion-red/90 hover:to-notion-red/70 dark:hover:from-notion-dark-red/90 dark:hover:to-notion-dark-red/70 transition-all duration-200 shadow-md"
                             >
-                                Sign Out
+                                {t("signOut")}
                             </motion.button>
                         </div>
                     </motion.div>

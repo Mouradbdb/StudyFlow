@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabase";
 import { Trash2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Subject { name: string; hours: number; priority: "High" | "Medium" | "Low"; color?: string }
 interface FreeTime { day: string; start: string; end: string }
@@ -44,6 +45,8 @@ export default function StudyForm({
   templates: Template[];
   fetchTemplates: () => Promise<void>;
 }) {
+  const t = useTranslations("StudyForm");
+  const tToasts = useTranslations("StudyForm.toasts");
   const [subjectName, setSubjectName] = useState("");
   const [hours, setHours] = useState("");
   const [priority, setPriority] = useState<"High" | "Medium" | "Low">("Medium");
@@ -60,10 +63,14 @@ export default function StudyForm({
     "#80DEEA", "#82B1FF", "#B388FF", "#F8BBD0",
   ];
 
+  const days = [
+    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
+  ].map((d) => ({ value: d, label: t(`days.${d}`) }));
+
   const addSubject = () => {
     const hoursNum = parseInt(hours);
     if (!subjectName || !hours || hoursNum <= 0) {
-      toast.error("Please enter a valid subject name and positive hours!");
+      toast.error(tToasts("invalidSubject"));
       return;
     }
     setSubjects([...subjects, { name: subjectName, hours: hoursNum, priority, color: color || undefined }]);
@@ -74,13 +81,13 @@ export default function StudyForm({
 
   const addFreeTime = () => {
     if (!day || !start || !end) {
-      toast.error("Please fill in all free time fields!");
+      toast.error(tToasts("invalidFreeTime"));
       return;
     }
     const [startH, startM] = start.split(":").map(Number);
     const [endH, endM] = end.split(":").map(Number);
     if (startH > endH || (startH === endH && startM >= endM)) {
-      toast.error("End time must be after start time!");
+      toast.error(tToasts("invalidTimeRange"));
       return;
     }
     setFreeTimes([...freeTimes, { day, start, end }]);
@@ -91,7 +98,7 @@ export default function StudyForm({
 
   const handleSubmit = () => {
     if (subjects.length === 0 || freeTimes.length === 0) {
-      toast.error("Please add at least one subject and one free time slot!");
+      toast.error(tToasts("insufficientData"));
       return;
     }
     const totalStudyHours = subjects.reduce((sum, s) => sum + s.hours, 0);
@@ -102,7 +109,7 @@ export default function StudyForm({
     }, 0);
 
     if (totalFreeHours < totalStudyHours) {
-      toast.error("Total free time must be sufficient for study hours!");
+      toast.error(tToasts("insufficientFreeTime"));
       return;
     }
     onSubmit(subjects, freeTimes, breakDuration, slotDuration, maxDailyHours);
@@ -110,18 +117,18 @@ export default function StudyForm({
 
   const handleSaveTemplate = async () => {
     if (!subjects.length || !freeTimes.length) {
-      toast.error("Subjects and free times cannot be empty!");
+      toast.error(tToasts("emptyTemplate"));
       return;
     }
     if (!newTemplateName.trim()) {
-      toast.error("Please enter a template name!");
+      toast.error(tToasts("noTemplateName"));
       return;
     }
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError) {
       console.error("User fetch error:", userError.message);
-      toast.error("Failed to fetch user.");
+      toast.error(tToasts("fetchUserFailed"));
       return;
     }
 
@@ -132,13 +139,13 @@ export default function StudyForm({
 
     if (error) {
       if (error.code === "23505") {
-        toast.error("A template with this name already exists!");
+        toast.error(tToasts("templateExists"));
       } else {
         console.error("Save template error:", error.message);
-        toast.error("Failed to save template.");
+        toast.error(tToasts("saveTemplateFailed"));
       }
     } else {
-      toast.success(`Template "${newTemplateName}" saved!`);
+      toast.success(tToasts("saveTemplateSuccess", { name: newTemplateName }));
       setNewTemplateName("");
       setIsSaveModalOpen(false);
       await fetchTemplates();
@@ -148,12 +155,12 @@ export default function StudyForm({
   const handleLoadTemplate = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
     if (!template) {
-      toast.error("Template not found!");
+      toast.error(tToasts("loadTemplateFailed"));
       return;
     }
     setSubjects(template.data.subjects);
     setFreeTimes(template.data.freeTimes);
-    toast.success(`Loaded template "${template.name}"! Submit to generate the schedule.`);
+    toast.success(tToasts("loadTemplateSuccess", { name: template.name }));
     setIsLoadModalOpen(false);
   };
 
@@ -161,7 +168,7 @@ export default function StudyForm({
     const template = templates.find((t) => t.id === templateId);
     if (!template) return;
 
-    if (!confirm(`Are you sure you want to delete "${template.name}"?`)) return;
+    if (!confirm(tToasts("confirmDelete", { name: template.name }))) return;
 
     const { error } = await supabase
       .from("templates")
@@ -170,53 +177,31 @@ export default function StudyForm({
 
     if (error) {
       console.error("Delete template error:", error.message);
-      toast.error("Failed to delete template.");
+      toast.error(tToasts("deleteTemplateFailed"));
     } else {
-      toast.success(`Template "${template.name}" deleted!`);
+      toast.success(tToasts("deleteTemplateSuccess", { name: template.name }));
       await fetchTemplates();
     }
   };
-
-  // const populateTestData = () => {
-  //   const testSubjects: Subject[] = [
-  //     { name: "Math", hours: 6, priority: "High", color: predefinedColors[0] },
-  //     { name: "Physics", hours: 4, priority: "Medium", color: predefinedColors[1] },
-  //     { name: "History", hours: 3, priority: "Low", color: predefinedColors[2] },
-  //     { name: "English", hours: 5, priority: "Medium", color: predefinedColors[3] },
-  //   ];
-  //   const testFreeTimes: FreeTime[] = [
-  //     { day: "Monday", start: "09:00", end: "17:00" },
-  //     { day: "Tuesday", start: "10:00", end: "14:00" },
-  //     { day: "Wednesday", start: "13:00", end: "17:00" },
-  //     { day: "Thursday", start: "09:00", end: "12:00" },
-  //     { day: "Friday", start: "14:00", end: "18:00" },
-  //   ];
-  //   setSubjects(testSubjects);
-  //   setFreeTimes(testFreeTimes);
-  //   setBreakDuration(15);
-  //   setSlotDuration(120);
-  //   setMaxDailyHours(8);
-  //   toast.success("Test data populated successfully!");
-  // };
 
   return (
     <div className="space-y-8">
       {/* Subjects Section */}
       <div className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray dark:border-notion-dark-gray transition-all duration-300 hover:shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">Subjects</h2>
+        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">{t("subjectsTitle")}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr,auto,auto,auto,auto] items-center">
           <input
             type="text"
             value={subjectName}
             onChange={(e) => setSubjectName(e.target.value)}
-            placeholder="e.g., Math"
+            placeholder={t("subjectPlaceholder")}
             className="p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray dark:border-notion-dark-gray rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-colors duration-300"
           />
           <input
             type="number"
             value={hours}
             onChange={(e) => setHours(e.target.value)}
-            placeholder="Hours"
+            placeholder={t("hoursPlaceholder")}
             min="1"
             className="p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray dark:border-notion-dark-gray rounded-lg w-24 focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-colors duration-300"
           />
@@ -225,9 +210,9 @@ export default function StudyForm({
             onChange={(e) => setPriority(e.target.value as "High" | "Medium" | "Low")}
             className="p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray dark:border-notion-dark-gray rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-colors duration-300"
           >
-            <option value="High">High</option>
-            <option value="Medium">Medium</option>
-            <option value="Low">Low</option>
+            <option value="High">{t("priorityHigh")}</option>
+            <option value="Medium">{t("priorityMedium")}</option>
+            <option value="Low">{t("priorityLow")}</option>
           </select>
           <div className="flex flex-wrap gap-2 items-center">
             {predefinedColors.map((c) => (
@@ -243,7 +228,7 @@ export default function StudyForm({
             onClick={addSubject}
             className="bg-notion-blue dark:bg-notion-dark-blue text-white py-2 px-4 rounded-lg hover:bg-notion-blue/90 dark:hover:bg-notion-dark-blue/90 hover:shadow-md transition-all duration-300"
           >
-            Add
+            {t("add")}
           </button>
         </div>
         {subjects.length > 0 && (
@@ -252,7 +237,7 @@ export default function StudyForm({
               <li key={i} className="flex justify-between items-center p-3 bg-notion-bg dark:bg-notion-dark-bg rounded-lg transition-colors duration-300">
                 <div className="flex items-center">
                   <span className="w-4 h-4 mr-2 rounded-full" style={{ backgroundColor: s.color || "transparent" }}></span>
-                  <span className="text-notion-text dark:text-notion-dark-text">{s.name} ({s.priority})</span>
+                  <span className="text-notion-text dark:text-notion-dark-text">{s.name} ({t(`priority${s.priority}`)})</span>
                 </div>
                 <span className="text-notion-text/70 dark:text-notion-dark-secondary">{s.hours} hrs</span>
               </li>
@@ -263,16 +248,16 @@ export default function StudyForm({
 
       {/* Free Time Section */}
       <div className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray dark:border-notion-dark-gray transition-all duration-300 hover:shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">Free Time</h2>
+        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">{t("freeTimeTitle")}</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr,1fr,1fr,auto] items-center">
           <select
             value={day}
             onChange={(e) => setDay(e.target.value)}
             className="p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray dark:border-notion-dark-gray rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-colors duration-300"
           >
-            <option value="">Select Day</option>
-            {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((d) => (
-              <option key={d} value={d}>{d}</option>
+            <option value="">{t("dayPlaceholder")}</option>
+            {days.map((d) => (
+              <option key={d.value} value={d.value}>{d.label}</option>
             ))}
           </select>
           <input
@@ -291,14 +276,14 @@ export default function StudyForm({
             onClick={addFreeTime}
             className="bg-notion-blue dark:bg-notion-dark-blue text-white py-2 px-4 rounded-lg hover:bg-notion-blue/90 dark:hover:bg-notion-dark-blue/90 hover:shadow-md transition-all duration-300"
           >
-            Add
+            {t("add")}
           </button>
         </div>
         {freeTimes.length > 0 && (
           <ul className="mt-4 space-y-2">
             {freeTimes.map((ft, i) => (
               <li key={i} className="flex justify-between items-center p-3 bg-notion-bg dark:bg-notion-dark-bg rounded-lg transition-colors duration-300">
-                <span className="text-notion-text dark:text-notion-dark-text">{ft.day}</span>
+                <span className="text-notion-text dark:text-notion-dark-text">{t(`days.${ft.day}`)}</span>
                 <span className="text-notion-text/70 dark:text-notion-dark-secondary">{ft.start} - {ft.end}</span>
               </li>
             ))}
@@ -308,10 +293,10 @@ export default function StudyForm({
 
       {/* Settings Section */}
       <div className="bg-white dark:bg-notion-dark-card p-6 rounded-xl shadow-md border border-notion-gray dark:border-notion-dark-gray transition-all duration-300 hover:shadow-lg">
-        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">Settings</h2>
+        <h2 className="text-xl font-semibold mb-4 text-notion-text dark:text-notion-dark-text">{t("settingsTitle")}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">Break Duration (minutes):</label>
+            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">{t("breakDurationLabel")}</label>
             <input
               type="number"
               value={breakDuration}
@@ -324,7 +309,7 @@ export default function StudyForm({
             />
           </div>
           <div>
-            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">Study Slot Duration (minutes):</label>
+            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">{t("slotDurationLabel")}</label>
             <input
               type="number"
               value={slotDuration}
@@ -337,7 +322,7 @@ export default function StudyForm({
             />
           </div>
           <div>
-            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">Max Daily Hours:</label>
+            <label className="block mb-2 text-notion-text dark:text-notion-dark-text">{t("maxDailyHoursLabel")}</label>
             <input
               type="number"
               value={maxDailyHours}
@@ -358,26 +343,20 @@ export default function StudyForm({
           onClick={handleSubmit}
           className="flex-1 bg-notion-red dark:bg-notion-dark-red text-white py-3 rounded-lg hover:bg-notion-red/90 dark:hover:bg-notion-dark-red/90 hover:shadow-md transition-all duration-300 font-semibold"
         >
-          {subjects.length > 0 && freeTimes.length > 0 ? "Regenerate Study Plan" : "Generate Study Plan"}
+          {subjects.length > 0 && freeTimes.length > 0 ? t("regenerateStudyPlan") : t("generateStudyPlan")}
         </button>
         <button
           onClick={() => setIsSaveModalOpen(true)}
           className="flex-1 bg-notion-yellow dark:bg-notion-dark-yellow text-notion-text dark:text-notion-dark-text py-3 rounded-lg hover:bg-notion-yellow/90 dark:hover:bg-notion-dark-yellow/90 hover:shadow-md transition-all duration-300 font-semibold"
         >
-          Save as Template
+          {t("saveAsTemplate")}
         </button>
         <button
           onClick={() => setIsLoadModalOpen(true)}
           className="flex-1 bg-notion-blue dark:bg-notion-dark-blue text-white py-3 rounded-lg hover:bg-notion-blue/90 dark:hover:bg-notion-dark-blue/90 hover:shadow-md transition-all duration-300 font-semibold"
         >
-          Load Template
+          {t("loadTemplate")}
         </button>
-        {/* <button
-          onClick={populateTestData}
-          className="flex-1 bg-notion-green dark:bg-notion-dark-green text-white py-3 rounded-lg hover:bg-notion-green/90 dark:hover:bg-notion-dark-green/90 hover:shadow-md transition-all duration-300 font-semibold"
-        >
-          Populate Test Data
-        </button> */}
       </div>
 
       {/* Save Template Modal */}
@@ -385,7 +364,7 @@ export default function StudyForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-notion-dark-card rounded-xl p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-notion-text dark:text-notion-dark-text">Save Template</h2>
+              <h2 className="text-lg font-semibold text-notion-text dark:text-notion-dark-text">{t("saveTemplateTitle")}</h2>
               <button
                 onClick={() => setIsSaveModalOpen(false)}
                 className="text-notion-text dark:text-notion-dark-text hover:text-notion-red dark:hover:text-notion-dark-red"
@@ -398,7 +377,7 @@ export default function StudyForm({
                 type="text"
                 value={newTemplateName}
                 onChange={(e) => setNewTemplateName(e.target.value)}
-                placeholder="e.g., Ramadan Time"
+                placeholder={t("templateNamePlaceholder")}
                 className="w-full p-2 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray dark:border-notion-dark-gray rounded-lg text-notion-text dark:text-notion-dark-text focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue"
               />
             </div>
@@ -406,7 +385,7 @@ export default function StudyForm({
               onClick={handleSaveTemplate}
               className="w-full px-4 py-2 bg-notion-green dark:bg-notion-dark-green text-white rounded-lg hover:bg-notion-green/90 dark:hover:bg-notion-dark-green/90 transition-colors duration-300"
             >
-              Save
+              {t("save")}
             </button>
           </div>
         </div>
@@ -417,7 +396,7 @@ export default function StudyForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-notion-dark-card rounded-xl p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold text-notion-text dark:text-notion-dark-text">Load Template</h2>
+              <h2 className="text-lg font-semibold text-notion-text dark:text-notion-dark-text">{t("loadTemplateTitle")}</h2>
               <button
                 onClick={() => setIsLoadModalOpen(false)}
                 className="text-notion-text dark:text-notion-dark-text hover:text-notion-red dark:hover:text-notion-dark-red"
@@ -435,7 +414,7 @@ export default function StudyForm({
                         onClick={() => handleLoadTemplate(template.id)}
                         className="p-1 text-notion-blue dark:text-notion-dark-blue hover:text-notion-blue/80 dark:hover:text-notion-dark-blue/80"
                       >
-                        Load
+                        {t("load")}
                       </button>
                       <button
                         onClick={() => handleDeleteTemplate(template.id)}
@@ -447,7 +426,7 @@ export default function StudyForm({
                   </div>
                 ))
               ) : (
-                <p className="text-notion-text/70 dark:text-notion-dark-secondary text-center">No templates saved yet.</p>
+                <p className="text-notion-text/70 dark:text-notion-dark-secondary text-center">{t("noTemplates")}</p>
               )}
             </div>
           </div>

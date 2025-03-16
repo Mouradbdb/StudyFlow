@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+
+// Define types for translation objects
+interface Testimonial {
+    quote: string;
+    author: string;
+}
 
 export default function Pricing() {
-
+    const t = useTranslations("Pricing"); // Access "Pricing" namespace
+    const tToasts = useTranslations("Pricing.toasts"); // For toast messages
     const [isPremium, setIsPremium] = useState(false);
     const router = useRouter();
 
@@ -23,29 +31,29 @@ export default function Pricing() {
                     .limit(1);
                 if (error) {
                     console.error("Error fetching premium status:", error.message);
-                    toast.error("Error checking your status.");
+                    toast.error(tToasts("errorCheckingStatus"));
                 } else if (data && data.length > 0) {
                     setIsPremium(data[0].is_premium || false);
                 }
             }
         };
         checkSession();
-    }, []);
+    }, [tToasts]);
 
     const handleUpgrade = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
-            toast.error("Please sign in to upgrade!");
+            toast.error(tToasts("signInRequired"));
             router.push("/sign-in");
             return;
         }
 
         if (isPremium) {
-            toast.info("You’re already a premium user!");
+            toast.info(tToasts("alreadyPremium"));
             return;
         }
 
-        toast.info("Redirecting to PayPal...");
+        toast.info(tToasts("redirecting"));
         try {
             const res = await fetch("/api/paypal_payment", {
                 method: "POST",
@@ -62,7 +70,7 @@ export default function Pricing() {
             window.location.href = approval_url;
         } catch (error) {
             console.error("Upgrade error:", error);
-            toast.error("Error upgrading: " + (error instanceof Error ? error.message : "Unknown error"));
+            toast.error(tToasts("errorUpgrading", { message: error instanceof Error ? error.message : "Unknown error" }));
         }
     };
 
@@ -80,10 +88,10 @@ export default function Pricing() {
                 className="text-center mb-12"
             >
                 <h1 className="text-4xl md:text-5xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
-                    Unlock Your Full Potential
+                    {t("title")}
                 </h1>
                 <p className="mt-4 text-lg md:text-xl text-notion-text dark:text-notion-dark-text max-w-2xl mx-auto">
-                    Choose the plan that supercharges your study experience with powerful features.
+                    {t("subtitle")}
                 </p>
             </motion.header>
 
@@ -98,42 +106,33 @@ export default function Pricing() {
                     whileHover={{ scale: 1.02 }}
                     className="p-6 bg-white dark:bg-notion-dark-card rounded-xl shadow-lg border border-notion-gray/20 dark:border-notion-dark-gray/20"
                 >
-                    <h2 className="text-2xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">Free</h2>
-                    <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">Perfect for getting started.</p>
+                    <h2 className="text-2xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">{t("freePlan.title")}</h2>
+                    <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">{t("freePlan.description")}</p>
                     <ul className="space-y-3 mb-6 text-sm">
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Basic scheduling features
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Save your progress
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
-                            <span className="text-notion-red">✘</span> No Ads
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
-                            <span className="text-notion-red">✘</span> Unlimited study plans
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
-                            <span className="text-notion-red">✘</span> Advanced templates
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-dark-secondary dark:text-notion-dark-secondary">
-                            <span className="text-notion-red">✘</span> Priority support
-                        </li>
+                        {Array.isArray(t.raw("freePlan.features")) &&
+                            (t.raw("freePlan.features") as string[]).map((feature, index) => (
+                                <li key={index} className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
+                                    <span className={index < 2 ? "text-notion-blue" : "text-notion-dark-secondary dark:text-notion-dark-secondary"}>
+                                        {index < 2 ? "✔️" : "✘"}
+                                    </span>
+                                    {feature}
+                                </li>
+                            ))}
                     </ul>
-                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">$0 / forever</p>
+                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">{t("freePlan.price")}</p>
                     {!isPremium ? (
                         <button
                             className="w-full py-3 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl opacity-60 cursor-not-allowed shadow-md"
                             disabled
                         >
-                            Current Plan
+                            {t("freePlan.currentPlan")}
                         </button>
                     ) : (
                         <button
                             className="w-full py-3 bg-notion-blue text-white rounded-xl hover:bg-notion-blue/90 transition-all duration-200 shadow-md"
                             onClick={() => router.push("/planner")}
                         >
-                            Go to Planner
+                            {t("freePlan.goToPlanner")}
                         </button>
                     )}
                 </motion.div>
@@ -144,33 +143,26 @@ export default function Pricing() {
                     className="p-6 bg-white dark:bg-notion-dark-card rounded-xl shadow-lg border-2 border-notion-blue dark:border-notion-dark-blue relative overflow-hidden"
                 >
                     <span className="absolute top-0 right-0 px-3 py-1 bg-notion-blue text-white text-xs font-medium rounded-bl-lg">
-                        Recommended
+                        {t("premiumPlan.recommended")}
                     </span>
-                    <h2 className="text-2xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">Premium</h2>
-                    <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">For serious students who want more.</p>
+                    <h2 className="text-2xl font-semibold text-notion-text dark:text-notion-dark-text mb-4">{t("premiumPlan.title")}</h2>
+                    <p className="text-notion-text dark:text-notion-dark-text mb-4 text-sm">{t("premiumPlan.description")}</p>
                     <ul className="space-y-3 mb-6 text-sm">
-
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Save unlimited templates
-                        </li>
-
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Priority email support
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> No ads
-                        </li>
-                        <li className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
-                            <span className="text-notion-blue">✔️</span> Early access to new features
-                        </li>
+                        {Array.isArray(t.raw("premiumPlan.features")) &&
+                            (t.raw("premiumPlan.features") as string[]).map((feature, index) => (
+                                <li key={index} className="flex items-center gap-2 text-notion-text dark:text-notion-dark-text">
+                                    <span className="text-notion-blue">✔️</span>
+                                    {feature}
+                                </li>
+                            ))}
                     </ul>
-                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">$2.99 / one-time</p>
+                    <p className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-6">{t("premiumPlan.price")}</p>
                     {isPremium ? (
                         <button
                             className="w-full py-3 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl opacity-60 cursor-not-allowed shadow-md"
                             disabled
                         >
-                            Your Plan
+                            {t("premiumPlan.yourPlan")}
                         </button>
                     ) : (
                         <motion.button
@@ -179,7 +171,7 @@ export default function Pricing() {
                             onClick={handleUpgrade}
                             className="w-full py-3 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
                         >
-                            Unlock Premium Now
+                            {t("premiumPlan.unlockButton")}
                         </motion.button>
                     )}
                 </motion.div>
@@ -192,27 +184,24 @@ export default function Pricing() {
                 className="mt-16"
             >
                 <h3 className="text-3xl font-semibold text-center text-notion-text dark:text-notion-dark-text mb-8">
-                    What Our Users Say
+                    {t("testimonialsTitle")}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {[
-                        { quote: "StudyFlow Premium doubled my productivity!", author: "Sarah, Student" },
-                        { quote: "Unlimited plans changed how I study!", author: "Ahmed, Developer" },
-                        { quote: "The best investment for my grades.", author: "Maria, Researcher" },
-                    ].map((testimonial, index) => (
-                        <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 + index * 0.2 }}
-                            className="p-6 bg-white dark:bg-notion-dark-card rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
-                        >
-                            <p className="text-notion-text dark:text-notion-dark-text text-sm italic">“{testimonial.quote}”</p>
-                            <p className="mt-3 text-xs text-notion-dark-secondary dark:text-notion-dark-secondary">
-                                - {testimonial.author}
-                            </p>
-                        </motion.div>
-                    ))}
+                    {Array.isArray(t.raw("testimonials")) &&
+                        (t.raw("testimonials") as Testimonial[]).map((testimonial, index) => (
+                            <motion.div
+                                key={index}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.8 + index * 0.2 }}
+                                className="p-6 bg-white dark:bg-notion-dark-card rounded-xl shadow-md border border-notion-gray/20 dark:border-notion-dark-gray/20"
+                            >
+                                <p className="text-notion-text dark:text-notion-dark-text text-sm italic">“{testimonial.quote}”</p>
+                                <p className="mt-3 text-xs text-notion-dark-secondary dark:text-notion-dark-secondary">
+                                    - {testimonial.author}
+                                </p>
+                            </motion.div>
+                        ))}
                 </div>
             </motion.section>
 
@@ -222,14 +211,15 @@ export default function Pricing() {
                 transition={{ delay: 1 }}
                 className="mt-12 text-center text-sm text-notion-text dark:text-notion-dark-text"
             >
+                {/* Simplified footer without t.rich() */}
                 <p>
-                    Questions? Contact us at{" "}
+                    {t("footer.text", { email: t("footer.email") })}
                     <a
                         href="mailto:support@studyflow.com"
-                        className="text-notion-blue dark:text-notion-dark-blue hover:underline font-medium"
+                        className="text-notion-blue dark:text-notion-dark-blue hover:underline font-medium ml-1"
                     >
-                        support@studyflow.com
-                    </a>.
+                        {t("footer.email")}
+                    </a>
                 </p>
             </motion.footer>
         </motion.main>

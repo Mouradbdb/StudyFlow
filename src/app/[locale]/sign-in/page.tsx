@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,8 @@ export default function SignInPage() {
   const [resetEmail, setResetEmail] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const router = useRouter();
+  const t = useTranslations("SignIn"); // Namespace for sign-in page
+  const tToasts = useTranslations("SignIn.toasts"); // Namespace for toast messages
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,10 +29,10 @@ export default function SignInPage() {
     setLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(tToasts("signInError", { message: error.message }));
       console.log(error);
     } else {
-      toast.success("Signed in successfully!");
+      toast.success(tToasts("signInSuccess"));
       router.push("/planner");
     }
   };
@@ -42,10 +46,10 @@ export default function SignInPage() {
     setResetLoading(false);
 
     if (error) {
-      toast.error(error.message);
+      toast.error(tToasts("resetError", { message: error.message }));
       console.log(error);
     } else {
-      toast.success("Password reset email sent! Check your inbox.");
+      toast.success(tToasts("resetSuccess"));
       setShowResetModal(false);
       setResetEmail("");
     }
@@ -70,12 +74,12 @@ export default function SignInPage() {
           transition={{ delay: 0.4 }}
           className="text-3xl font-bold text-notion-text dark:text-notion-dark-text mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-dark-blue"
         >
-          Sign In
+          {t("title")}
         </motion.h1>
         <form onSubmit={handleSignIn} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-notion-text dark:text-notion-dark-text mb-2">
-              Email
+              {t("emailLabel")}
             </label>
             <motion.input
               type="email"
@@ -83,13 +87,13 @@ export default function SignInPage() {
               onChange={(e) => setEmail(e.target.value)}
               whileFocus={{ borderColor: "#4299E1" }}
               className="w-full p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray/30 dark:border-notion-dark-gray/30 rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-all duration-300"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
               required
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-notion-text dark:text-notion-dark-text mb-2">
-              Password
+              {t("passwordLabel")}
             </label>
             <motion.input
               type="password"
@@ -97,7 +101,7 @@ export default function SignInPage() {
               onChange={(e) => setPassword(e.target.value)}
               whileFocus={{ borderColor: "#4299E1" }}
               className="w-full p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray/30 dark:border-notion-dark-gray/30 rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-all duration-300"
-              placeholder="••••••••"
+              placeholder={t("passwordPlaceholder")}
               required
             />
           </div>
@@ -115,7 +119,7 @@ export default function SignInPage() {
                 className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"
               />
             ) : (
-              "Sign In"
+              t("signInButton")
             )}
           </motion.button>
         </form>
@@ -125,7 +129,7 @@ export default function SignInPage() {
             whileHover={{ scale: 1.05 }}
             className="text-sm text-notion-blue dark:text-notion-dark-blue hover:underline font-medium transition-colors duration-200"
           >
-            Forgot Password?
+            {t("forgotPassword")}
           </motion.button>
         </div>
         <motion.p
@@ -134,13 +138,13 @@ export default function SignInPage() {
           transition={{ delay: 0.6 }}
           className="mt-6 text-center text-sm text-notion-text/70 dark:text-notion-dark-secondary"
         >
-          Don’t have an account?{" "}
-          <a
+          {t("noAccount")}{" "}
+          <Link
             href="/sign-up"
             className="text-notion-blue dark:text-notion-dark-blue hover:underline font-medium transition-colors duration-200"
           >
-            Sign Up
-          </a>
+            {t("signUpLink")}
+          </Link>
         </motion.p>
       </motion.div>
 
@@ -159,12 +163,12 @@ export default function SignInPage() {
             className="bg-white dark:bg-notion-dark-card p-6 rounded-2xl shadow-xl w-full max-w-sm border border-notion-gray/20 dark:border-notion-dark-gray/20"
           >
             <h2 className="text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-              Reset Password
+              {t("resetTitle")}
             </h2>
             <form onSubmit={handlePasswordReset} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-notion-text dark:text-notion-dark-text mb-2">
-                  Email
+                  {t("resetEmailLabel")}
                 </label>
                 <motion.input
                   type="email"
@@ -172,7 +176,7 @@ export default function SignInPage() {
                   onChange={(e) => setResetEmail(e.target.value)}
                   whileFocus={{ borderColor: "#4299E1" }}
                   className="w-full p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray/30 dark:border-notion-dark-gray/30 rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-all duration-300"
-                  placeholder="you@example.com"
+                  placeholder={t("emailPlaceholder")}
                   required
                 />
               </div>
@@ -184,7 +188,7 @@ export default function SignInPage() {
                   whileTap={{ scale: 0.95 }}
                   className="flex-1 py-2 bg-notion-gray dark:bg-notion-dark-gray text-notion-text dark:text-notion-dark-text rounded-lg hover:bg-notion-gray/90 dark:hover:bg-notion-dark-gray/90 transition-all duration-300"
                 >
-                  Cancel
+                  {t("cancelButton")}
                 </motion.button>
                 <motion.button
                   type="submit"
@@ -200,7 +204,7 @@ export default function SignInPage() {
                       className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                     />
                   ) : (
-                    "Send Reset Link"
+                    t("resetButton")
                   )}
                 </motion.button>
               </div>

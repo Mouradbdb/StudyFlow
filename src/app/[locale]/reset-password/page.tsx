@@ -1,36 +1,40 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 export default function ResetPasswordPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const t = useTranslations("ResetPassword"); // Namespace for reset password page
+    const tToasts = useTranslations("ResetPassword.toasts"); // Namespace for toast messages
 
     useEffect(() => {
         const handleRedirect = async () => {
             const { data, error } = await supabase.auth.getSession();
             if (error || !data.session) {
-                toast.error("Invalid or expired reset link.");
+                toast.error(tToasts("invalidLink"));
                 router.push("/sign-in");
             }
         };
         handleRedirect();
-    }, [router]);
+    }, [router, tToasts]);
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password !== confirmPassword) {
-            toast.error("Passwords do not match!");
+            toast.error(tToasts("passwordMismatch"));
             return;
         }
         if (password.length < 6) {
-            toast.error("Password must be at least 6 characters long!");
+            toast.error(tToasts("passwordTooShort"));
             return;
         }
         setLoading(true);
@@ -38,10 +42,10 @@ export default function ResetPasswordPage() {
         setLoading(false);
 
         if (error) {
-            toast.error(error.message);
+            toast.error(tToasts("resetError", { message: error.message }));
             console.log(error);
         } else {
-            toast.success("Password reset successfully! Please sign in.");
+            toast.success(tToasts("resetSuccess"));
             router.push("/sign-in");
         }
     };
@@ -65,12 +69,12 @@ export default function ResetPasswordPage() {
                     transition={{ delay: 0.4 }}
                     className="text-3xl font-bold text-notion-text dark:text-notion-dark-text mb-8 text-center bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-dark-blue"
                 >
-                    Reset Password
+                    {t("title")}
                 </motion.h1>
                 <form onSubmit={handleResetPassword} className="space-y-6">
                     <div>
                         <label className="block text-sm font-medium text-notion-text dark:text-notion-dark-text mb-2">
-                            New Password
+                            {t("newPasswordLabel")}
                         </label>
                         <motion.input
                             type="password"
@@ -78,13 +82,13 @@ export default function ResetPasswordPage() {
                             onChange={(e) => setPassword(e.target.value)}
                             whileFocus={{ borderColor: "#4299E1" }}
                             className="w-full p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray/30 dark:border-notion-dark-gray/30 rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-all duration-300"
-                            placeholder="••••••••"
+                            placeholder={t("passwordPlaceholder")}
                             required
                         />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-notion-text dark:text-notion-dark-text mb-2">
-                            Confirm New Password
+                            {t("confirmPasswordLabel")}
                         </label>
                         <motion.input
                             type="password"
@@ -92,7 +96,7 @@ export default function ResetPasswordPage() {
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             whileFocus={{ borderColor: "#4299E1" }}
                             className="w-full p-3 bg-notion-bg dark:bg-notion-dark-bg border border-notion-gray/30 dark:border-notion-dark-gray/30 rounded-lg focus:ring-2 focus:ring-notion-blue dark:focus:ring-notion-dark-blue focus:outline-none text-notion-text dark:text-notion-dark-text transition-all duration-300"
-                            placeholder="••••••••"
+                            placeholder={t("passwordPlaceholder")}
                             required
                         />
                     </div>
@@ -110,7 +114,7 @@ export default function ResetPasswordPage() {
                                 className="inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"
                             />
                         ) : (
-                            "Update Password"
+                            t("updateButton")
                         )}
                     </motion.button>
                 </form>
@@ -120,13 +124,13 @@ export default function ResetPasswordPage() {
                     transition={{ delay: 0.6 }}
                     className="mt-6 text-center text-sm text-notion-text/70 dark:text-notion-dark-secondary"
                 >
-                    Back to{" "}
-                    <a
+                    {t("backTo")}{" "}
+                    <Link
                         href="/sign-in"
                         className="text-notion-blue dark:text-notion-dark-blue hover:underline font-medium transition-colors duration-200"
                     >
-                        Sign In
-                    </a>
+                        {t("signInLink")}
+                    </Link>
                 </motion.p>
             </motion.div>
         </motion.div>

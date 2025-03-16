@@ -7,6 +7,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface ScheduleSlot {
   day: string;
@@ -32,6 +33,8 @@ export default function StudyPlan({
   isGenerating: boolean;
   isPremium: boolean;
 }) {
+  const t = useTranslations("StudyPlan"); // Access "StudyPlan" namespace
+  const tToasts = useTranslations("StudyPlan.toasts"); // For toast messages
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
@@ -42,7 +45,7 @@ export default function StudyPlan({
       return;
     }
     if (schedule.length === 0) {
-      toast.error("No schedule to export!");
+      toast.error(tToasts("noSchedule"));
       return;
     }
 
@@ -66,7 +69,7 @@ export default function StudyPlan({
     link.href = URL.createObjectURL(blob);
     link.download = "study_plan.csv";
     link.click();
-    toast.success("Schedule exported as CSV!");
+    toast.success(tToasts("exportCSVSuccess"));
   };
 
   const exportToPDF = () => {
@@ -76,13 +79,13 @@ export default function StudyPlan({
       return;
     }
     if (schedule.length === 0) {
-      toast.error("No schedule to export!");
+      toast.error(tToasts("noSchedule"));
       return;
     }
 
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text("Study Plan", 10, 10);
+    doc.text(t("title"), 10, 10);
 
     const dayOrder = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     const sortedSchedule = [...schedule].sort((a, b) => {
@@ -121,7 +124,7 @@ export default function StudyPlan({
     });
 
     doc.save("study_plan.pdf");
-    toast.success("Schedule exported as PDF!");
+    toast.success(tToasts("exportPDFSuccess"));
   };
 
   const exportToICS = () => {
@@ -131,7 +134,7 @@ export default function StudyPlan({
       return;
     }
     if (schedule.length === 0) {
-      toast.error("No schedule to export!");
+      toast.error(tToasts("noSchedule"));
       return;
     }
 
@@ -183,7 +186,7 @@ export default function StudyPlan({
     link.href = URL.createObjectURL(blob);
     link.download = "study_plan.ics";
     link.click();
-    toast.success("Schedule exported as ICS!");
+    toast.success(tToasts("exportICSSuccess"));
   };
 
   const timeToMinutes = (time: string): number => {
@@ -204,7 +207,7 @@ export default function StudyPlan({
           animate={{ x: 0 }}
           className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red"
         >
-          Study Plan
+          {t("title")}
         </motion.h2>
         <div className="relative w-full sm:w-auto">
           <motion.button
@@ -213,7 +216,7 @@ export default function StudyPlan({
             onClick={() => setIsExportOpen(!isExportOpen)}
             className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300 text-sm sm:text-base"
           >
-            Export
+            {t("export")}
           </motion.button>
           <AnimatePresence>
             {isExportOpen && (
@@ -236,7 +239,7 @@ export default function StudyPlan({
                     }}
                     className="block w-full text-left px-3 sm:px-4 py-2 text-xs sm:text-sm text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/20 dark:hover:bg-notion-dark-gray/20 transition-colors duration-200"
                   >
-                    Export to {format}
+                    {t("exportTo", { format })}
                   </motion.button>
                 ))}
               </motion.div>
@@ -255,7 +258,7 @@ export default function StudyPlan({
             className="flex flex-col items-center py-6 sm:py-8"
           >
             <p className="text-base sm:text-lg font-medium text-notion-text dark:text-notion-dark-text mb-4 sm:mb-6">
-              Generating your study plan...
+              {t("generating")}
             </p>
             <motion.div
               animate={{ rotate: 360 }}
@@ -283,7 +286,7 @@ export default function StudyPlan({
               onClick={onClearSchedule}
               className="mt-4 sm:mt-6 w-full px-4 py-2 sm:py-3 bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text rounded-xl hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70 transition-all duration-300 shadow-md text-sm sm:text-base"
             >
-              Clear Schedule
+              {t("clearSchedule")}
             </motion.button>
           </motion.div>
         ) : (
@@ -294,7 +297,7 @@ export default function StudyPlan({
             exit={{ opacity: 0 }}
             className="text-notion-text/70 dark:text-notion-dark-secondary text-center py-6 sm:py-8 text-sm sm:text-base"
           >
-            No study plan generated yet. Go to Plan Setup to create one.
+            {t("noPlan")}
           </motion.p>
         )}
       </AnimatePresence>
@@ -314,10 +317,10 @@ export default function StudyPlan({
               className="bg-white dark:bg-notion-dark-card p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
             >
               <h2 className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
-                Upgrade to Premium
+                {t("premiumModal.title")}
               </h2>
               <p className="text-notion-text dark:text-notion-dark-text mb-4 sm:mb-6 text-sm sm:text-base">
-                Exporting your study plan is a premium feature. Upgrade to unlock this and more!
+                {t("premiumModal.description")}
               </p>
               <div className="flex justify-center gap-2 sm:gap-4">
                 <motion.button
@@ -325,14 +328,14 @@ export default function StudyPlan({
                   onClick={() => setShowPremiumModal(false)}
                   className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200 text-sm sm:text-base"
                 >
-                  Cancel
+                  {t("premiumModal.cancel")}
                 </motion.button>
                 <Link href="/pricing">
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 text-sm sm:text-base"
                   >
-                    Upgrade Now
+                    {t("premiumModal.upgrade")}
                   </motion.button>
                 </Link>
               </div>
