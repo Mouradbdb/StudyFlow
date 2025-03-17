@@ -145,7 +145,7 @@ export default function StudyPlan({
     const icsLines = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//StudyFlow//StudyPlan//EN",
+      "PRODID:-////StudyPlan//EN",
       "CALSCALE:GREGORIAN",
     ];
 

@@ -44,7 +44,7 @@
   },
   "LandingPage": {
     "hero": {
-      "title": "StudyFlow",
+      "title": "Plan2Study",
       "subtitle": "Transform your study routine with flow and precision.",
       "button": "Get Started"
     },
@@ -67,15 +67,15 @@
     },
     "cta": {
       "title": "Elevate Your Study Game",
-      "subtitle": "Join thousands of students mastering their schedules with StudyFlow.",
+      "subtitle": "Join thousands of students mastering their schedules with Plan2Study.",
       "button": "Start Planning Now"
     },
     "footer": {
-      "text": "© {year} StudyFlow by xAI. Built with passion for smarter studying."
+      "text": "© {year} Plan2study. Built with passion for smarter studying."
     }
   },
   "Planner": {
-    "title": "Study Planner",
+    "title": "Plan2Study",
     "premiumBadge": "Premium ✨",
     "unlockPremium": "Unlock Premium",
     "signIn": "Sign In",
@@ -233,7 +233,7 @@
     "testimonialsTitle": "What Our Users Say",
     "testimonials": [
       {
-        "quote": "StudyFlow Premium doubled my productivity!",
+        "quote": "Plan2study Premium doubled my productivity!",
         "author": "Sarah, Student"
       },
       {
@@ -247,7 +247,7 @@
     ],
     "footer": {
       "text": "Questions? Contact us at {email}.",
-      "email": "support@studyflow.com"
+      "email": "support@plan2study.com"
     },
     "toasts": {
       "signInRequired": "Please sign in to upgrade!",

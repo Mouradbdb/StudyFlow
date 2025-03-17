@@ -3,21 +3,22 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
-// Define types for translation objects
 interface Testimonial {
     quote: string;
     author: string;
 }
 
 export default function Pricing() {
-    const t = useTranslations("Pricing"); // Access "Pricing" namespace
-    const tToasts = useTranslations("Pricing.toasts"); // For toast messages
+    const t = useTranslations("Pricing");
+    const tToasts = useTranslations("Pricing.toasts");
     const [isPremium, setIsPremium] = useState(false);
+    const [loading, setLoading] = useState(false); // Added loading state
     const router = useRouter();
+    const searchParams = useSearchParams(); // Added to check redirect params
 
     useEffect(() => {
         const checkSession = async () => {
@@ -36,9 +37,22 @@ export default function Pricing() {
                     setIsPremium(data[0].is_premium || false);
                 }
             }
+
+            // Handle redirect from PayPal
+            const success = searchParams.get("success");
+            const canceled = searchParams.get("canceled");
+            if (success === "true" && !isPremium) {
+                toast.success("Welcome to Premium! Enjoy Plan2study without limits.", {
+                    duration: 5000,
+                });
+                setIsPremium(true); // Optimistically update UI
+                await checkSession(); // Re-check to confirm
+            } else if (canceled === "true") {
+                toast.info("Payment canceled. You’re still on the free plan.");
+            }
         };
         checkSession();
-    }, [tToasts]);
+    }, [tToasts, searchParams]);
 
     const handleUpgrade = async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -53,6 +67,7 @@ export default function Pricing() {
             return;
         }
 
+        setLoading(true);
         toast.info(tToasts("redirecting"));
         try {
             const res = await fetch("/api/paypal_payment", {
@@ -70,7 +85,13 @@ export default function Pricing() {
             window.location.href = approval_url;
         } catch (error) {
             console.error("Upgrade error:", error);
-            toast.error(tToasts("errorUpgrading", { message: error instanceof Error ? error.message : "Unknown error" }));
+            toast.error(
+                `${tToasts("errorUpgrading", {
+                    message: error instanceof Error ? error.message : "Unknown error"
+                })} Contact support@plan2study.com if this persists.`
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -169,9 +190,11 @@ export default function Pricing() {
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={handleUpgrade}
-                            className="w-full py-3 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+                            disabled={loading}
+                            className={`w-full py-3 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl transition-all duration-200 shadow-md ${loading ? "opacity-60 cursor-not-allowed" : "hover:from-notion-blue/90 hover:to-notion-dark-blue/90"
+                                }`}
                         >
-                            {t("premiumPlan.unlockButton")}
+                            {loading ? "Processing..." : t("premiumPlan.unlockButton")}
                         </motion.button>
                     )}
                 </motion.div>
@@ -211,11 +234,10 @@ export default function Pricing() {
                 transition={{ delay: 1 }}
                 className="mt-12 text-center text-sm text-notion-text dark:text-notion-dark-text"
             >
-                {/* Simplified footer without t.rich() */}
                 <p>
                     {t("footer.text", { email: t("footer.email") })}
                     <a
-                        href="mailto:support@studyflow.com"
+                        href="mailto:support@plan2study.com"
                         className="text-notion-blue dark:text-notion-dark-blue hover:underline font-medium ml-1"
                     >
                         {t("footer.email")}

@@ -33,7 +33,7 @@
     },
     "LandingPage": {
         "hero": {
-            "title": "StudyFlow",
+            "title": "Plan2Study",
             "subtitle": "Transformez votre routine d'étude avec fluidité et précision.",
             "button": "Commencer"
         },
@@ -56,15 +56,15 @@
         },
         "cta": {
             "title": "Élevez votre jeu d'étude",
-            "subtitle": "Rejoignez des milliers d'étudiants qui maîtrisent leurs emplois du temps avec StudyFlow.",
+            "subtitle": "Rejoignez des milliers d'étudiants qui maîtrisent leurs emplois du temps avec Plan2Study.",
             "button": "Commencer à planifier maintenant"
         },
         "footer": {
-            "text": "© {year} StudyFlow par xAI. Construit avec passion pour une étude plus intelligente."
+            "text": "© {year} Plan2Study. Construit avec passion pour une étude plus intelligente."
         }
     },
     "Planner": {
-        "title": "Planificateur d'études",
+        "title": "Plan2Study",
         "premiumBadge": "Premium ✨",
         "unlockPremium": "Débloquer Premium",
         "signIn": "Se connecter",
@@ -222,7 +222,7 @@
         "testimonialsTitle": "Ce Que Disent Nos Utilisateurs",
         "testimonials": [
             {
-                "quote": "StudyFlow Premium a doublé ma productivité !",
+                "quote": "Plan2Study Premium a doublé ma productivité !",
                 "author": "Sarah, Étudiante"
             },
             {
@@ -236,7 +236,7 @@
         ],
         "footer": {
             "text": "Des questions ? Contactez-nous à {email}.",
-            "email": "support@studyflow.com"
+            "email": "support@plan2study.com"
         },
         "toasts": {
             "signInRequired": "Veuillez vous connecter pour mettre à niveau !",

@@ -11,7 +11,7 @@ import DarkModeToggle from "../components/DarkModeToggle";
 
 
 export const metadata = {
-  title: "Study Planner",
+  title: "Plan2study",
 };
 
 export function generateViewport() {
@@ -37,6 +37,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="google-adsense-account" content="ca-pub-9139235274050125" />
         <script

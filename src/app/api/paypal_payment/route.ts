@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
 
     try {
         console.log("Fetching PayPal access token...");
-        const authResponse = await fetch("https://api-m.sandbox.paypal.com/v1/oauth2/token", {
+        // Changed to live endpoint
+        const authResponse = await fetch("https://api-m.paypal.com/v1/oauth2/token", {
             method: "POST",
             headers: {
                 Authorization: `Basic ${Buffer.from(
@@ -53,8 +54,9 @@ export async function POST(req: NextRequest) {
         console.log("Access token received:", access_token);
 
         console.log("Creating PayPal order for userId:", userId);
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-        const orderResponse = await fetch("https://api-m.sandbox.paypal.com/v2/checkout/orders", {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://your-live-domain.com"; // Update to live domain
+        // Changed to live endpoint
+        const orderResponse = await fetch("https://api-m.paypal.com/v2/checkout/orders", {
             method: "POST",
             headers: {
                 Authorization: `Bearer ${access_token}`,
@@ -66,9 +68,9 @@ export async function POST(req: NextRequest) {
                     {
                         amount: {
                             currency_code: "USD",
-                            value: "2.99",
+                            value: "0.01",
                         },
-                        description: "StudyFlow Premium Upgrade",
+                        description: "Plan2study Premium Upgrade",
                         custom_id: userId,
                     },
                 ],
