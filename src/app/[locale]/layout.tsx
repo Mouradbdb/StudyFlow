@@ -1,4 +1,5 @@
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
@@ -52,6 +53,7 @@ export default async function LocaleLayout({
             </header>
             {children}
             <Analytics />
+            <SpeedInsights />
             <Toaster richColors position="top-left" />
           </NextIntlClientProvider>
         </DarkModeProvider>
