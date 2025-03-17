@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/next';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
@@ -6,6 +7,7 @@ import "../globals.css";
 import { Toaster } from "sonner";
 import { DarkModeProvider } from "../lib/DarkModeContext";
 import DarkModeToggle from "../components/DarkModeToggle";
+
 
 export const metadata = {
   title: "Study Planner",
@@ -23,10 +25,10 @@ export default async function LocaleLayout({
   params
 }: {
   children: ReactNode;
-  params: Promise<{locale: string}>;
+  params: Promise<{ locale: string }>;
 }) {
   // Ensure that the incoming `locale` is valid
-  const {locale} = await params;
+  const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
@@ -49,6 +51,7 @@ export default async function LocaleLayout({
               <DarkModeToggle />
             </header>
             {children}
+            <Analytics />
             <Toaster richColors position="top-left" />
           </NextIntlClientProvider>
         </DarkModeProvider>
