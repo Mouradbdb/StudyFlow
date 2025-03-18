@@ -1,4 +1,8 @@
 {
+    "LanguageSwitcher": {
+        "english": "Anglais",
+        "french": "Français"
+    },
     "ScheduleDisplay": {
         "title": "Votre plan d'étude hebdomadaire",
         "listView": "Vue en liste",
@@ -25,10 +29,6 @@
             "description": "La vue calendrier est une fonctionnalité Premium. Passez à la version Premium pour débloquer cela et plus encore, y compris des plans illimités et une planification avancée !",
             "maybeLater": "Peut-être plus tard",
             "goPremium": "Passer à Premium"
-        },
-        "LanguageSwitcher": {
-            "english": "Anglais",
-            "french": "Français"
         }
     },
     "LandingPage": {

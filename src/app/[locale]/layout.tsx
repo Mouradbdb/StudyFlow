@@ -8,6 +8,7 @@ import "../globals.css";
 import { Toaster } from "sonner";
 import { DarkModeProvider } from "../lib/DarkModeContext";
 import DarkModeToggle from "../components/DarkModeToggle";
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 
 export const metadata = {
@@ -20,7 +21,6 @@ export function generateViewport() {
     initialScale: 1,
   };
 }
-
 export default async function LocaleLayout({
   children,
   params
@@ -28,7 +28,6 @@ export default async function LocaleLayout({
   children: ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  // Ensure that the incoming `locale` is valid
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
     notFound();
@@ -49,7 +48,8 @@ export default async function LocaleLayout({
       <body className="bg-notion-bg text-notion-text dark:bg-notion-dark-bg dark:text-notion-dark-text min-h-screen transition-colors duration-300">
         <DarkModeProvider>
           <NextIntlClientProvider>
-            <header className="fixed top-0 right-0 p-4 z-50">
+            <header className="fixed top-4 right-4 z-50 flex flex-col gap-4">
+              <LanguageSwitcher />
               <DarkModeToggle />
             </header>
             {children}

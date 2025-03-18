@@ -1,4 +1,8 @@
 {
+  "LanguageSwitcher": {
+    "english": "English",
+    "french": "French"
+  },
   "Common": {
     "days": {
       "Monday": "Monday",
@@ -36,10 +40,6 @@
       "description": "Calendar View is a Premium feature. Upgrade to unlock this and more, including unlimited plans and advanced scheduling!",
       "maybeLater": "Maybe Later",
       "goPremium": "Go Premium"
-    },
-    "LanguageSwitcher": {
-      "english": "English",
-      "french": "French"
     }
   },
   "LandingPage": {
