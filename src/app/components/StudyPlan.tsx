@@ -214,7 +214,7 @@ export default function StudyPlan({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsExportOpen(!isExportOpen)}
-            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-notion-green to-notion-dark-green text-white rounded-xl shadow-md hover:from-notion-green/90 hover:to-notion-dark-green/90 transition-all duration-300 text-sm sm:text-base"
+            className="w-full sm:w-auto px-4 py-2 bg-gradient-to-r from-green-100 to-green-200 text-gray-800 rounded-xl shadow-md hover:from-green-200 hover:to-green-300 transition-all duration-300 text-sm sm:text-base"
           >
             {t("export")}
           </motion.button>

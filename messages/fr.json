@@ -68,7 +68,7 @@
         "premiumBadge": "Premium ✨",
         "unlockPremium": "Débloquer Premium",
         "signIn": "Se connecter",
-        "feedback": "Retour",
+        "feedback": "Votre avis",
         "views": {
             "planSetup": "Configuration du plan",
             "studyPlan": "Plan d'étude"
@@ -79,8 +79,8 @@
             "goPremium": "Passer à Premium"
         },
         "feedbackModal": {
-            "title": "Votre retour",
-            "placeholder": "Votre retour...",
+            "title": "Votre avis",
+            "placeholder": "Votre avis...",
             "cancel": "Annuler",
             "send": "Envoyer"
         },
@@ -98,9 +98,9 @@
             "premiumUpdateFailed": "Échec de la mise à jour du statut Premium.",
             "fetchUserFailed": "Erreur lors de la récupération du profil utilisateur : {error}",
             "fetchPremiumFailed": "Erreur lors de la récupération du statut Premium : {error}",
-            "feedbackEmpty": "Veuillez fournir un retour ou une réaction !",
-            "feedbackFailed": "Échec de l'envoi du retour. Veuillez réessayer.",
-            "feedbackSuccess": "Retour envoyé ! Merci !"
+            "feedbackEmpty": "Veuillez fournir un avis ou une réaction !",
+            "feedbackFailed": "Échec de l'envoi de votre avis. Veuillez réessayer.",
+            "feedbackSuccess": "Avis envoyé ! Merci !"
         }
     },
     "ProfileMenu": {

@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import ProfileMenu from "../../components/ProfileMenu";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 interface Subject {
   name: string;
@@ -39,8 +40,8 @@ declare global {
 }
 
 function PlannerContent() {
-  const t = useTranslations("Planner"); // Access "Planner" namespace
-  const tToasts = useTranslations("Planner.toasts"); // For toast messages
+  const t = useTranslations("Planner");
+  const tToasts = useTranslations("Planner.toasts");
   const [schedule, setSchedule] = useState<ScheduleSlot[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,12 +50,13 @@ function PlannerContent() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // New loading state
   const [activeView, setActiveView] = useState<"planSetup" | "studyPlan">("planSetup");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [freeTimes, setFreeTimes] = useState<FreeTime[]>([]);
-  const [breakDuration, setBreakDuration] = useState(15);
+  const [breakDuration, setBreakDuration] = useState(5);
   const [slotDuration, setSlotDuration] = useState(120);
-  const [maxDailyHours, setMaxDailyHours] = useState(8);
+  const [maxDailyHours, setMaxDailyHours] = useState(4);
   const [showAdModal, setShowAdModal] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
@@ -64,9 +66,11 @@ function PlannerContent() {
 
   useEffect(() => {
     const checkSession = async () => {
+      setIsLoading(true); // Start loading
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) {
         console.error("Session error:", error.message);
+        setIsLoading(false);
         return;
       }
       setIsSignedIn(!!session);
@@ -127,10 +131,12 @@ function PlannerContent() {
           }
         }
       }
+      setIsLoading(false); // End loading
     };
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setIsLoading(true); // Start loading on auth state change
       setIsSignedIn(!!session);
       if (event === "SIGNED_IN" && session) {
         await fetchSchedule(session.user.id, getWeekStart());
@@ -159,6 +165,7 @@ function PlannerContent() {
         setIsPremium(false);
         setUserProfile(null);
       }
+      setIsLoading(false); // End loading
     });
 
     return () => {
@@ -404,16 +411,23 @@ function PlannerContent() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="w-full min-h-screen p-4 sm:p-6 bg-gradient-to-br from-notion-bg to-notion-bg/80 dark:from-notion-dark-bg dark:to-notion-dark-bg/80"
+      className="w-full min-h-screen p-4 sm:p-6 bg-gradient-to-br from-gray-50 to-blue-50 dark:from-gray-900 dark:to-blue-950"
     >
       <div className="max-w-6xl mx-auto">
         <header className="flex flex-col sm:flex-row justify-between items-center mb-6 sm:mb-8 gap-4 sm:gap-0">
           <motion.div className="flex items-center gap-3" whileHover={{ scale: 1.02 }}>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-notion-text dark:text-notion-dark-text bg-clip-text text-transparent bg-gradient-to-r from-notion-blue to-notion-red">
+            <Image
+              src="/logo.png"
+              alt="Planner Logo"
+              width={40}
+              height={40}
+              className="rounded-full shadow-md"
+            />
+            <h1 className="text-2xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-cyan-400 dark:from-blue-400 dark:to-cyan-300 tracking-tight">
               {t("title")}
             </h1>
             {isPremium && (
-              <span className="px-2 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white text-xs sm:text-sm font-medium rounded-full shadow-md">
+              <span className="px-2 py-1 bg-gradient-to-r from-blue-500 to-cyan-400 text-white text-xs sm:text-sm font-medium rounded-full shadow-md">
                 {t("premiumBadge")}
               </span>
             )}
@@ -423,18 +437,24 @@ function PlannerContent() {
               <motion.a
                 href="/pricing"
                 whileHover={{ scale: 1.05 }}
-                className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+                className="text-xs sm:text-sm font-medium text-blue-500 dark:text-cyan-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-100/10 hover:bg-blue-100/20 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 transition-all duration-200"
               >
                 {t("unlockPremium")}
               </motion.a>
             )}
-            {isSignedIn && userProfile ? (
+            {isLoading ? (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"
+              />
+            ) : isSignedIn && userProfile ? (
               <ProfileMenu user={userProfile} />
             ) : (
               <motion.a
                 href="/sign-in"
                 whileHover={{ scale: 1.05 }}
-                className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+                className="text-xs sm:text-sm font-medium text-blue-500 dark:text-cyan-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-100/10 hover:bg-blue-100/20 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 transition-all duration-200"
               >
                 {t("signIn")}
               </motion.a>
@@ -442,7 +462,7 @@ function PlannerContent() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               onClick={() => setShowFeedbackModal(true)}
-              className="text-xs sm:text-sm font-medium text-notion-blue dark:text-notion-dark-blue px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200"
+              className="text-xs sm:text-sm font-medium text-blue-500 dark:text-cyan-300 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-100/10 hover:bg-blue-100/20 dark:bg-blue-900/10 dark:hover:bg-blue-900/20 transition-all duration-200"
             >
               {t("feedback")}
             </motion.button>
@@ -462,8 +482,8 @@ function PlannerContent() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveView(view as "planSetup" | "studyPlan")}
               className={`w-full sm:flex-1 py-2 sm:py-3 px-4 sm:px-6 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all duration-300 ${activeView === view
-                ? "bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white"
-                : "bg-notion-gray/50 dark:bg-notion-dark-gray/50 text-notion-text dark:text-notion-dark-text hover:bg-notion-gray/70 dark:hover:bg-notion-dark-gray/70"
+                ? "bg-gradient-to-r from-blue-500 to-cyan-400 text-white"
+                : "bg-blue-100/50 dark:bg-blue-900/50 text-gray-900 dark:text-gray-100 hover:bg-blue-100/70 dark:hover:bg-blue-900/70"
                 }`}
             >
               {t(`views.${view}`)}
@@ -525,7 +545,7 @@ function PlannerContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-4 sm:mt-6 p-4 bg-notion-red/10 dark:bg-notion-dark-red/10 text-notion-red dark:text-notion-dark-red rounded-xl border border-notion-red/20 dark:border-notion-dark-red/20 shadow-md text-xs sm:text-sm"
+              className="mt-4 sm:mt-6 p-4 bg-red-100/10 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-xl border border-red-200/20 dark:border-red-900/20 shadow-md text-xs sm:text-sm"
             >
               <p className="font-medium">{error}</p>
             </motion.div>
@@ -535,7 +555,7 @@ function PlannerContent() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="mt-4 sm:mt-6 p-4 bg-notion-yellow/10 dark:bg-notion-dark-yellow/10 text-notion-yellow dark:text-notion-dark-yellow rounded-xl border border-notion-yellow/20 dark:border-notion-dark-yellow/20 shadow-md text-xs sm:text-sm"
+              className="mt-4 sm:mt-6 p-4 bg-yellow-100/10 dark:bg-yellow-900/10 text-yellow-600 dark:text-yellow-400 rounded-xl border border-yellow-200/20 dark:border-yellow-900/20 shadow-md text-xs sm:text-sm"
             >
               <p className="font-medium">{warning}</p>
             </motion.div>
@@ -572,9 +592,9 @@ function PlannerContent() {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-white dark:bg-notion-dark-card p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-gray/20 dark:border-notion-dark-gray/20 text-center"
+                className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl w-full max-w-md border border-gray-200/20 dark:border-gray-700/20 text-center"
               >
-                <h2 className="text-lg sm:text-xl font-bold text-notion-text dark:text-notion-dark-text mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                   {t("adModal.title")}
                 </h2>
                 <ins
@@ -586,13 +606,13 @@ function PlannerContent() {
                   data-full-width-responsive="true"
                   data-adtest="on"
                 />
-                <p className="text-notion-text dark:text-notion-dark-text mt-4 text-xs sm:text-sm">
+                <p className="text-gray-600 dark:text-gray-400 mt-4 text-xs sm:text-sm">
                   {t("adModal.message")}
                 </p>
                 <motion.a
                   whileHover={{ scale: 1.05 }}
                   href="/pricing"
-                  className="mt-4 inline-block px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-notion-blue to-notion-dark-blue text-white rounded-xl font-medium text-xs sm:text-sm hover:from-notion-blue/90 hover:to-notion-dark-blue/90 transition-all duration-200 shadow-md"
+                  className="mt-4 inline-block px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-blue-500 to-cyan-400 text-white rounded-xl font-medium text-xs sm:text-sm hover:from-blue-500/90 hover:to-cyan-400/90 transition-all duration-200 shadow-md"
                 >
                   {t("adModal.goPremium")}
                 </motion.a>
@@ -613,14 +633,14 @@ function PlannerContent() {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
-                className="bg-notion-dark-bg text-notion-dark-text p-4 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-notion-dark-gray/20 text-center"
+                className="bg-gray-800 text-gray-100 p-4 sm:p-6 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700/20 text-center"
               >
                 <h2 className="text-lg sm:text-xl font-bold mb-4">{t("feedbackModal.title")}</h2>
                 <textarea
                   value={feedbackText}
                   onChange={(e) => setFeedbackText(e.target.value)}
                   placeholder={t("feedbackModal.placeholder")}
-                  className="w-full h-24 sm:h-32 p-2 bg-notion-dark-card text-notion-dark-text border border-notion-dark-gray/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-notion-blue text-sm"
+                  className="w-full h-24 sm:h-32 p-2 bg-gray-700 text-gray-100 border border-gray-600/20 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
                 <div className="flex justify-center gap-2 sm:gap-4 mt-4">
                   {["😊", "🙂", "😐", "😕"].map((emoji) => (
@@ -630,8 +650,8 @@ function PlannerContent() {
                       whileHover={{ scale: 1.2 }}
                       whileTap={{ scale: 0.9 }}
                       className={`text-xl sm:text-2xl p-1 sm:p-2 rounded-full transition-all duration-200 ${feedbackReaction === emoji
-                        ? "bg-notion-blue/20 border-2 border-notion-blue text-notion-blue"
-                        : "bg-notion-dark-gray/10 hover:bg-notion-dark-gray/30 border-2 border-transparent"
+                        ? "bg-blue-500/20 border-2 border-blue-500 text-blue-500"
+                        : "bg-gray-600/10 hover:bg-gray-600/30 border-2 border-transparent"
                         }`}
                     >
                       {emoji}
@@ -646,14 +666,14 @@ function PlannerContent() {
                       setFeedbackText("");
                       setFeedbackReaction(null);
                     }}
-                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-gray/10 hover:bg-notion-gray/20 dark:bg-notion-dark-gray/10 dark:hover:bg-notion-dark-gray/20 transition-all duration-200 text-xs sm:text-sm"
+                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-gray-600/10 hover:bg-gray-600/20 transition-all duration-200 text-xs sm:text-sm"
                   >
                     {t("feedbackModal.cancel")}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     onClick={handleFeedbackSubmit}
-                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-notion-blue text-white hover:bg-notion-blue/90 transition-all duration-200 text-xs sm:text-sm"
+                    className="px-3 sm:px-4 py-1 sm:py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-500/90 transition-all duration-200 text-xs sm:text-sm"
                   >
                     {t("feedbackModal.send")}
                   </motion.button>

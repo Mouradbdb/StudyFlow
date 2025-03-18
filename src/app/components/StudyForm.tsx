@@ -305,7 +305,7 @@ export default function StudyForm({
               min="5"
               max="60"
               step="5"
-              placeholder="e.g., 15"
+              placeholder="e.g., 5"
             />
           </div>
           <div>
