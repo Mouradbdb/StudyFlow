@@ -50,7 +50,6 @@ function PlannerContent() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // New loading state
   const [activeView, setActiveView] = useState<"planSetup" | "studyPlan">("planSetup");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [freeTimes, setFreeTimes] = useState<FreeTime[]>([]);
@@ -61,17 +60,18 @@ function PlannerContent() {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackReaction, setFeedbackReaction] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Added loading state
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const checkSession = async () => {
-      setIsLoading(true); // Start loading
+      console.time("getSession"); // Debug timing
       const { data: { session }, error } = await supabase.auth.getSession();
+      console.timeEnd("getSession");
       if (error) {
         console.error("Session error:", error.message);
-        setIsLoading(false);
-        return;
+        toast.error(tToasts("sessionCheckFailed", { error: error.message }));
       }
       setIsSignedIn(!!session);
       if (session) {
@@ -131,13 +131,14 @@ function PlannerContent() {
           }
         }
       }
-      setIsLoading(false); // End loading
+      setIsLoading(false); // Set loading false after all checks
     };
     checkSession();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setIsLoading(true); // Start loading on auth state change
+      console.log("Auth event:", event, "Session exists:", !!session); // Debug auth changes
       setIsSignedIn(!!session);
+      setIsLoading(false);
       if (event === "SIGNED_IN" && session) {
         await fetchSchedule(session.user.id, getWeekStart());
         await fetchTemplates(session.user.id);
@@ -165,7 +166,6 @@ function PlannerContent() {
         setIsPremium(false);
         setUserProfile(null);
       }
-      setIsLoading(false); // End loading
     });
 
     return () => {
@@ -406,6 +406,17 @@ function PlannerContent() {
     }
   };
 
+  // Render loading state until auth is confirmed
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-600 dark:text-gray-400">
+        Loading...
+      </div>
+    );
+  }
+
+  console.log("Render - isSignedIn:", isSignedIn, "userProfile:", userProfile); // Debug render state
+
   return (
     <motion.main
       initial={{ opacity: 0 }}
@@ -442,13 +453,7 @@ function PlannerContent() {
                 {t("unlockPremium")}
               </motion.a>
             )}
-            {isLoading ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full"
-              />
-            ) : isSignedIn && userProfile ? (
+            {isSignedIn && userProfile ? (
               <ProfileMenu user={userProfile} />
             ) : (
               <motion.a
